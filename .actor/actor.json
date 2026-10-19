@@ -1,0 +1,11 @@
+{
+  "actorSpecification": 1,
+  "name": "normawatch-boe",
+  "title": "NormaWatch",
+  "description": "Monitor for BOE data: new general regulations (Section I) as JSON, metadata and links only.",
+  "version": "0.1",
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 256,
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile"
+}

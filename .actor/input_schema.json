@@ -1,0 +1,58 @@
+{
+  "title": "NormaWatch input",
+  "description": "Choose the BOE publication dates and optional filters. Only Section I (general provisions) is read.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "dateFrom": {
+      "title": "From date",
+      "type": "string",
+      "description": "First BOE date to read, not after today (Europe/Madrid). Empty means today.",
+      "editor": "datepicker",
+      "dateType": "absolute"
+    },
+    "dateTo": {
+      "title": "To date",
+      "type": "string",
+      "description": "Last BOE date to read, at most 31 days after the from date. Empty means the from date.",
+      "editor": "datepicker",
+      "dateType": "absolute"
+    },
+    "departments": {
+      "title": "Departments",
+      "type": "array",
+      "description": "Keep only items whose department contains one of these texts (case-insensitive, plain text). At most 50 entries.",
+      "editor": "stringList",
+      "maxItems": 50
+    },
+    "keywords": {
+      "title": "Keywords",
+      "type": "array",
+      "description": "Keep only items whose title contains one of these texts (case-insensitive, plain text). At most 50 entries.",
+      "editor": "stringList",
+      "maxItems": 50
+    },
+    "onlyNew": {
+      "title": "Only new items",
+      "type": "boolean",
+      "description": "Skip items already returned by earlier runs (useful for scheduled runs).",
+      "default": false
+    },
+    "maxItems": {
+      "title": "Maximum items",
+      "type": "integer",
+      "description": "Stop after this many items.",
+      "default": 500,
+      "minimum": 1,
+      "maximum": 10000
+    },
+    "requestDelayMs": {
+      "title": "Delay between requests (ms)",
+      "type": "integer",
+      "description": "Pause between two requests to the BOE. At least 500.",
+      "default": 1000,
+      "minimum": 500,
+      "maximum": 10000
+    }
+  }
+}

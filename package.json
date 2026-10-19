@@ -1,0 +1,30 @@
+{
+  "name": "normawatch-boe",
+  "version": "0.1.0",
+  "description": "NormaWatch: monitor for BOE data (Section I, general provisions), as JSON.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "check": "npm run typecheck && npm run test",
+    "start": "node src/main.ts"
+  },
+  "dependencies": {
+    "apify": "3.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "apify-cli": "1.10.0",
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "get-uri": {
+      "basic-ftp": "6.2.3"
+    }
+  }
+}
