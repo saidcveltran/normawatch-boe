@@ -21,10 +21,10 @@ try {
   exitCode = summary.exitCode;
 } catch (err) {
   if (err instanceof BoeError) {
-    log.error("Invalid input", { reason: err.message });
+    log.error("Entrada no válida", { reason: err.message });
     exitCode = 2;
   } else {
-    log.error("Unexpected error", { name: errName(err) });
+    log.error("Error inesperado", { name: errName(err) });
     exitCode = 1;
   }
 } finally {

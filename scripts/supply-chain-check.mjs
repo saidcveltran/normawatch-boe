@@ -1,10 +1,11 @@
-// Supply-chain gate for the Actor. Run before every push:
-//   node scripts/supply-chain-check.mjs [--snapshot FILE] [--save-snapshot]
-// Checks: 7-day release-age rule on added/changed packages, `npm ls --all --package-lock-only` diff against the last
-// release snapshot, `npm audit --audit-level=moderate`, and an OSV query over the lockfile.
-// Exit codes: 0 clean, 1 finding, 2 tool or network error (fail closed). Standard library only.
-// Accepted advisories live in package.json `supplyChain.acceptedAdvisories`; each entry needs
-// non-empty `ids`, a non-empty `reason` and a parseable `recheck` date, or the run exits 2.
+// Control de cadena de suministro del Actor. Se ejecuta antes de cada publicación:
+//   node scripts/supply-chain-check.mjs [--snapshot ARCHIVO] [--save-snapshot]
+// Comprobaciones: regla de antigüedad de 7 días en los paquetes añadidos o cambiados, diferencia de
+// `npm ls --all --package-lock-only` con la última instantánea de publicación, `npm audit --audit-level=moderate`
+// y una consulta OSV sobre el archivo de bloqueo.
+// Códigos de salida: 0 limpio, 1 hallazgo, 2 error de herramienta o de red (falla en cerrado). Solo biblioteca estándar.
+// Los avisos aceptados están en `supplyChain.acceptedAdvisories` de package.json; cada entrada necesita
+// `ids` no vacío, `reason` no vacío y una fecha `recheck` válida, o la ejecución termina con código 2.
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -25,7 +26,7 @@ function nameFromPath(path) {
   return i < 0 ? null : path.slice(i + 'node_modules/'.length);
 }
 
-/** Registry packages in a lockfile v3 object, as sorted [{name, version}]. */
+/** Paquetes del registro de un archivo de bloqueo v3, como [{name, version}] ordenado. */
 export function lockPackages(lock) {
   const seen = new Map();
   for (const [path, meta] of Object.entries(lock.packages ?? {})) {
@@ -38,7 +39,7 @@ export function lockPackages(lock) {
   );
 }
 
-/** Flatten `npm ls --all --json` output into a sorted list of "name@version". */
+/** Aplana la salida de `npm ls --all --json` en una lista ordenada de "name@version". */
 export function flattenLs(ls) {
   const out = new Set();
   const walk = (deps) => {
@@ -62,7 +63,7 @@ function byName(list) {
   return map;
 }
 
-/** Diff two flattened ls lists: added and removed package names, and changed versions. */
+/** Diferencia entre dos listas aplanadas: paquetes añadidos y quitados, y versiones cambiadas. */
 export function diffSnapshots(previous, current) {
   const before = byName(previous);
   const after = byName(current);
@@ -84,7 +85,7 @@ export function diffSnapshots(previous, current) {
   return { added: added.sort(), removed: removed.sort(), changed: changed.sort() };
 }
 
-/** Packages whose version was published less than minDays before `now`. */
+/** Paquetes cuya versión se publicó hace menos de minDays días respecto a `now`. */
 export function ageViolations(entries, publishedAt, now, minDays = MIN_AGE_DAYS) {
   const bad = [];
   for (const { name, version } of entries) {
@@ -99,28 +100,28 @@ export function ageViolations(entries, publishedAt, now, minDays = MIN_AGE_DAYS)
   return bad;
 }
 
-/** Reject malformed accepted-advisory entries (fail closed, exit 2). */
+/** Rechaza las entradas mal formadas de avisos aceptados (falla en cerrado, código 2). */
 export function validateAccepted(accepted, now = new Date()) {
-  if (!Array.isArray(accepted)) throw new Error('accepted advisories must be an array');
+  if (!Array.isArray(accepted)) throw new Error('los avisos aceptados deben ser una lista');
   accepted.forEach((a, i) => {
-    const where = `accepted advisory #${i + 1}`;
+    const where = `aviso aceptado n.º ${i + 1}`;
     if (
       !a ||
       !Array.isArray(a.ids) ||
       a.ids.length === 0 ||
       a.ids.some((x) => typeof x !== 'string' || x.trim() === '')
     ) {
-      throw new Error(`${where}: "ids" must be a non-empty list of advisory ids`);
+      throw new Error(`${where}: "ids" debe ser una lista no vacía de identificadores de aviso`);
     }
     if (typeof a.reason !== 'string' || a.reason.trim() === '') {
-      throw new Error(`${where} (${a.ids.join(', ')}): "reason" must be a non-empty string`);
+      throw new Error(`${where} (${a.ids.join(', ')}): "reason" debe ser un texto no vacío`);
     }
     if (typeof a.recheck !== 'string' || Number.isNaN(new Date(a.recheck).getTime())) {
-      throw new Error(`${where} (${a.ids.join(', ')}): "recheck" must be a parseable date`);
+      throw new Error(`${where} (${a.ids.join(', ')}): "recheck" debe ser una fecha válida`);
     }
     if (new Date(a.recheck).getTime() > now.getTime() + MAX_RECHECK_DAYS * DAY_MS) {
       throw new Error(
-        `${where} (${a.ids.join(', ')}): "recheck" is more than ${MAX_RECHECK_DAYS} days away`,
+        `${where} (${a.ids.join(', ')}): "recheck" está a más de ${MAX_RECHECK_DAYS} días`,
       );
     }
   });
@@ -130,12 +131,12 @@ function isAccepted(id, accepted, now) {
   return accepted.some((a) => a.ids.includes(id) && new Date(a.recheck).getTime() >= now.getTime());
 }
 
-/** Advisories from `npm audit --json` at moderate or above, split into open and accepted. */
+/** Avisos de `npm audit --json` de nivel moderado o superior, separados en abiertos y aceptados. */
 export function auditFindings(audit, accepted, now) {
   if (audit?.error) {
     const { code = 'unknown', summary = '', detail = '' } = audit.error;
     const message = typeof audit.message === 'string' ? audit.message : '';
-    throw new Error(`npm audit failed (${code}): ${summary} ${detail} ${message}`.trim());
+    throw new Error(`npm audit falló (${code}): ${summary} ${detail} ${message}`.trim());
   }
   if (
     audit?.auditReportVersion !== 2 ||
@@ -143,7 +144,7 @@ export function auditFindings(audit, accepted, now) {
     typeof audit.vulnerabilities !== 'object' ||
     Array.isArray(audit.vulnerabilities)
   ) {
-    throw new Error('npm audit report has an unexpected shape (need auditReportVersion 2)');
+    throw new Error('el informe de npm audit tiene una forma inesperada (se necesita auditReportVersion 2)');
   }
   const open = [];
   const waived = [];
@@ -166,7 +167,7 @@ export function auditFindings(audit, accepted, now) {
   return { open, waived };
 }
 
-/** OSV results (one entry per queried package, same order) into open and accepted findings. */
+/** Resultados de OSV (una entrada por paquete consultado, en el mismo orden) como hallazgos abiertos y aceptados. */
 export function osvFindings(results, packages, accepted, now) {
   const open = [];
   const waived = [];
@@ -194,7 +195,7 @@ export async function queryOsv(packages, fetchFn = fetch) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`OSV query failed: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`la consulta a OSV falló: HTTP ${res.status}`);
     results.push(...(await res.json()).results);
   }
   return results;
@@ -209,7 +210,7 @@ export function makePublishTimeLookup(fetchFn = fetch) {
         fetchFn(REGISTRY_URL + name.replace('/', '%2F'), {
           headers: { accept: 'application/json' },
         }).then(async (res) => {
-          if (!res.ok) throw new Error(`registry lookup failed for ${name}: HTTP ${res.status}`);
+          if (!res.ok) throw new Error(`la consulta al registro falló para ${name}: HTTP ${res.status}`);
           return (await res.json()).time ?? {};
         }),
       );
@@ -218,7 +219,7 @@ export function makePublishTimeLookup(fetchFn = fetch) {
   };
 }
 
-/** Core run with injected effects. Returns { code, lines }. */
+/** Ejecución principal con efectos inyectados. Devuelve { code, lines }. */
 export async function run(deps) {
   const { now, lock, previous, current, audit, accepted, osv, publishTime } = deps;
   validateAccepted(accepted, now);
@@ -230,16 +231,16 @@ export async function run(deps) {
   if (previous) {
     const diff = diffSnapshots(previous, current);
     lines.push(
-      `npm ls diff: ${diff.added.length} added, ${diff.removed.length} removed, ${diff.changed.length} changed`,
+      `diferencia de npm ls: ${diff.added.length} añadidos, ${diff.removed.length} quitados, ${diff.changed.length} cambiados`,
     );
-    for (const a of diff.added) lines.push(`  added: ${a}`);
-    for (const r of diff.removed) lines.push(`  removed: ${r}`);
-    for (const c of diff.changed) lines.push(`  changed: ${c}`);
+    for (const a of diff.added) lines.push(`  añadido: ${a}`);
+    for (const r of diff.removed) lines.push(`  quitado: ${r}`);
+    for (const c of diff.changed) lines.push(`  cambiado: ${c}`);
     const touched = new Set(current.filter((e) => !previous.includes(e)));
     toCheck = packages.filter((p) => touched.has(`${p.name}@${p.version}`));
   } else {
     lines.push(
-      `npm ls diff: no previous snapshot, all ${current.length} packages treated as added`,
+      `diferencia de npm ls: sin instantánea previa, los ${current.length} paquetes se tratan como añadidos`,
     );
   }
 
@@ -252,31 +253,31 @@ export async function run(deps) {
     failed = true;
     lines.push(
       v.ageDays === null
-        ? `FAIL release age: ${v.name}@${v.version} has no publish date`
-        : `FAIL release age: ${v.name}@${v.version} is ${v.ageDays.toFixed(1)} days old (minimum ${MIN_AGE_DAYS})`,
+        ? `FALLO antigüedad: ${v.name}@${v.version} no tiene fecha de publicación`
+        : `FALLO antigüedad: ${v.name}@${v.version} tiene ${v.ageDays.toFixed(1)} días (mínimo ${MIN_AGE_DAYS})`,
     );
   }
-  lines.push(`release age: ${toCheck.length} package(s) checked, ${young.length} too new`);
+  lines.push(`antigüedad: ${toCheck.length} paquete(s) comprobados, ${young.length} demasiado nuevos`);
 
   const a = auditFindings(audit, accepted, now);
   for (const f of a.open) {
     failed = true;
-    lines.push(`FAIL npm audit: ${f.id} in ${f.name} (${f.severity})`);
+    lines.push(`FALLO npm audit: ${f.id} en ${f.name} (${f.severity})`);
   }
-  for (const f of a.waived) lines.push(`accepted npm audit: ${f.id} in ${f.name} (${f.severity})`);
+  for (const f of a.waived) lines.push(`aceptado npm audit: ${f.id} en ${f.name} (${f.severity})`);
 
   const o = osvFindings(await osv(packages), packages, accepted, now);
   for (const f of o.open) {
     failed = true;
-    lines.push(`FAIL osv: ${f.id} in ${f.name}`);
+    lines.push(`FALLO osv: ${f.id} en ${f.name}`);
   }
-  for (const f of o.waived) lines.push(`accepted osv: ${f.id} in ${f.name}`);
+  for (const f of o.waived) lines.push(`aceptado osv: ${f.id} en ${f.name}`);
 
-  lines.push(failed ? 'supply-chain check: FAILED' : 'supply-chain check: ok');
+  lines.push(failed ? 'control de cadena de suministro: FALLIDO' : 'control de cadena de suministro: correcto');
   return { code: failed ? 1 : 0, lines };
 }
 
-/** Run npm and parse its JSON stdout; returns { status, json }. */
+/** Ejecuta npm y analiza su salida JSON; devuelve { status, json }. */
 function npmRun(args) {
   const res = spawnSync('npm', args, {
     cwd: actorDir,
@@ -288,7 +289,7 @@ function npmRun(args) {
   try {
     json = JSON.parse(res.stdout);
   } catch {
-    throw new Error(`npm ${args.join(' ')} produced no JSON: ${(res.stderr || '').slice(0, 200)}`);
+    throw new Error(`npm ${args.join(' ')} no produjo JSON: ${(res.stderr || '').slice(0, 200)}`);
   }
   return { status: res.status, json };
 }
@@ -296,15 +297,15 @@ function npmRun(args) {
 export const LS_ARGS = ['ls', '--all', '--json', '--package-lock-only'];
 
 /**
- * The dependency tree as pinned by the lockfile (never the installed node_modules), flattened.
- * Fails closed when npm ls exits non-zero or reports `error` or `problems`.
+ * El árbol de dependencias fijado por el archivo de bloqueo (nunca el node_modules instalado), aplanado.
+ * Falla en cerrado si npm ls termina con código distinto de cero o informa de `error` o `problems`.
  */
 export function lockfileTree(npm) {
   const { status, json } = npm(LS_ARGS);
-  if (status !== 0) throw new Error(`npm ls failed with exit code ${status}`);
-  if (json?.error) throw new Error(`npm ls reported an error: ${JSON.stringify(json.error).slice(0, 200)}`);
+  if (status !== 0) throw new Error(`npm ls falló con código de salida ${status}`);
+  if (json?.error) throw new Error(`npm ls informó de un error: ${JSON.stringify(json.error).slice(0, 200)}`);
   if (json?.problems) {
-    throw new Error(`npm ls reported problems: ${JSON.stringify(json.problems).slice(0, 200)}`);
+    throw new Error(`npm ls informó de problemas: ${JSON.stringify(json.problems).slice(0, 200)}`);
   }
   return flattenLs(json);
 }
@@ -328,7 +329,7 @@ async function main(argv) {
   console.log(result.lines.join('\n'));
   if (argv.includes('--save-snapshot') && result.code === 0) {
     writeFileSync(snapshotPath, JSON.stringify(current, null, 2) + '\n');
-    console.log(`snapshot saved: ${snapshotPath}`);
+    console.log(`instantánea guardada: ${snapshotPath}`);
   }
   return result.code;
 }
@@ -337,7 +338,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   main(process.argv.slice(2)).then(
     (code) => process.exit(code),
     (err) => {
-      console.error(`supply-chain check error: ${err.message}`);
+      console.error(`error del control de cadena de suministro: ${err.message}`);
       process.exit(2);
     },
   );

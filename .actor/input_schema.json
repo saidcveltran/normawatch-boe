@@ -1,55 +1,55 @@
 {
-  "title": "NormaWatch input",
-  "description": "Choose the BOE publication dates and optional filters. Only Section I (general provisions) is read.",
+  "title": "Entrada de NormaWatch",
+  "description": "Elige las fechas de publicación del BOE y los filtros opcionales. Solo se lee la sección I (disposiciones generales).",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
     "dateFrom": {
-      "title": "From date",
+      "title": "Fecha desde",
       "type": "string",
-      "description": "First BOE date to read, not after today (Europe/Madrid). Empty means today.",
+      "description": "Primera fecha del BOE que se lee, no posterior a hoy (Europe/Madrid). Vacía significa hoy.",
       "editor": "datepicker",
       "dateType": "absolute"
     },
     "dateTo": {
-      "title": "To date",
+      "title": "Fecha hasta",
       "type": "string",
-      "description": "Last BOE date to read, at most 31 days after the from date. Empty means the from date.",
+      "description": "Última fecha del BOE que se lee, como máximo 31 días después de la fecha desde. Vacía significa la fecha desde.",
       "editor": "datepicker",
       "dateType": "absolute"
     },
     "departments": {
-      "title": "Departments",
+      "title": "Departamentos",
       "type": "array",
-      "description": "Keep only items whose department contains one of these texts (case-insensitive, plain text). At most 50 entries.",
+      "description": "Conserva solo los elementos cuyo departamento contiene alguno de estos textos (sin distinguir mayúsculas, texto literal). Máximo 50 entradas.",
       "editor": "stringList",
       "maxItems": 50
     },
     "keywords": {
-      "title": "Keywords",
+      "title": "Palabras clave",
       "type": "array",
-      "description": "Keep only items whose title contains one of these texts (case-insensitive, plain text). At most 50 entries.",
+      "description": "Conserva solo los elementos cuyo título contiene alguno de estos textos (sin distinguir mayúsculas, texto literal). Máximo 50 entradas.",
       "editor": "stringList",
       "maxItems": 50
     },
     "onlyNew": {
-      "title": "Only new items",
+      "title": "Solo elementos nuevos",
       "type": "boolean",
-      "description": "Skip items already returned by earlier runs (useful for scheduled runs).",
+      "description": "Omite los elementos ya devueltos en ejecuciones anteriores (útil en ejecuciones programadas).",
       "default": false
     },
     "maxItems": {
-      "title": "Maximum items",
+      "title": "Máximo de elementos",
       "type": "integer",
-      "description": "Stop after this many items.",
+      "description": "Se detiene al alcanzar este número de elementos.",
       "default": 500,
       "minimum": 1,
       "maximum": 10000
     },
     "requestDelayMs": {
-      "title": "Delay between requests (ms)",
+      "title": "Pausa entre peticiones (ms)",
       "type": "integer",
-      "description": "Pause between two requests to the BOE. At least 500.",
+      "description": "Pausa entre dos peticiones al BOE. Mínimo 500.",
       "default": 1000,
       "minimum": 500,
       "maximum": 10000

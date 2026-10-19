@@ -1,8 +1,11 @@
-// BOE open data client and parser. Standard library only (built-in fetch, Intl, JSON).
-// The only URL ever requested is BASE_URL plus a date that passed strict validation.
+// Cliente de datos abiertos del BOE y bucle de ejecución. Solo biblioteca estándar (fetch, Intl, JSON).
+// La única URL que se solicita es BASE_URL más una fecha que ha pasado una validación estricta.
+import { BoeError, errName } from "./errors.ts";
+import { dropMessages, parseSumario } from "./parse.ts";
+import type { OutputItem } from "./parse.ts";
 
-export const SOURCE_LINE = "Fuente de los datos: Agencia Estatal Boletín Oficial del Estado";
-export const SOURCE_URL = "https://www.boe.es";
+export { BoeError, errName };
+
 export const BASE_URL = "https://www.boe.es/datosabiertos/api/boe/sumario/";
 export const USER_AGENT = "normawatch-boe/0.1 (+https://aiskaron.com/en/tools/normawatch-boe/)";
 
@@ -11,40 +14,10 @@ export const MAX_BYTES = 4 * 1024 * 1024;
 const BACKOFF_MS = [2000, 4000, 8000];
 const MAX_RETRY_AFTER_MS = 60_000;
 const MAX_RANGE_DAYS = 31;
-const MAX_TEXT = 2000;
-const BOE_HOST = "www.boe.es";
-
-export class BoeError extends Error {
-  constructor(message: string, options?: { cause?: string }) {
-    super(message, options);
-    this.name = "BoeError";
-  }
-}
-
-export function errName(err: unknown): string {
-  return err instanceof Error && err.name ? err.name : "UnknownError";
-}
-
-export type OutputItem = {
-  id: string;
-  date: string;
-  section: "1";
-  department: string;
-  epigraph: string;
-  title: string;
-  urlHtml: string;
-  urlPdf: string;
-  urlXml: string;
-  retrievedAt: string;
-  source: string;
-  sourceUrl: string;
-};
-
-export type Dropped = { badId: number; badUrl: number };
 
 export type RunInput = { dates: string[]; maxItems: number; requestDelayMs: number };
 
-// ---------- dates and input ----------
+// ---------- fechas y entrada ----------
 
 function validDate(value: string): boolean {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -71,7 +44,7 @@ export function madridToday(now: Date = new Date()): string {
 }
 
 export function buildSumarioUrl(isoDate: string): string {
-  if (typeof isoDate !== "string" || !validDate(isoDate)) throw new BoeError("invalid date");
+  if (typeof isoDate !== "string" || !validDate(isoDate)) throw new BoeError("fecha no válida");
   return BASE_URL + isoDate.replaceAll("-", "");
 }
 
@@ -79,7 +52,7 @@ function intField(input: Record<string, unknown>, name: string, def: number, min
   const v = input[name];
   if (v === undefined || v === null) return def;
   if (typeof v !== "number" || !Number.isInteger(v) || v < min || v > max) {
-    throw new BoeError(`${name} must be an integer from ${min} to ${max}`);
+    throw new BoeError(`${name} debe ser un entero entre ${min} y ${max}`);
   }
   return v;
 }
@@ -87,18 +60,18 @@ function intField(input: Record<string, unknown>, name: string, def: number, min
 function dateField(input: Record<string, unknown>, name: string): string | undefined {
   const v = input[name];
   if (v === undefined || v === null || v === "") return undefined;
-  if (typeof v !== "string" || !validDate(v)) throw new BoeError(`${name} must be a date as YYYY-MM-DD`);
+  if (typeof v !== "string" || !validDate(v)) throw new BoeError(`${name} debe ser una fecha con formato AAAA-MM-DD`);
   return v;
 }
 
 export function parseInput(input: Record<string, unknown>, today: string): RunInput {
   const from = dateField(input, "dateFrom") ?? today;
   const to = dateField(input, "dateTo") ?? from;
-  if (dayNumber(from) > dayNumber(today)) throw new BoeError("dateFrom must not be after today (future date)");
-  if (dayNumber(to) > dayNumber(today)) throw new BoeError("dateTo must not be after today (future date)");
-  if (dayNumber(to) < dayNumber(from)) throw new BoeError("dateTo must not be before dateFrom");
+  if (dayNumber(from) > dayNumber(today)) throw new BoeError("dateFrom no puede ser posterior a hoy (fecha futura)");
+  if (dayNumber(to) > dayNumber(today)) throw new BoeError("dateTo no puede ser posterior a hoy (fecha futura)");
+  if (dayNumber(to) < dayNumber(from)) throw new BoeError("dateTo no puede ser anterior a dateFrom");
   if (dayNumber(to) - dayNumber(from) > MAX_RANGE_DAYS) {
-    throw new BoeError(`dateTo must be at most ${MAX_RANGE_DAYS} days after dateFrom`);
+    throw new BoeError(`dateTo debe ser como máximo ${MAX_RANGE_DAYS} días posterior a dateFrom`);
   }
   const dates: string[] = [];
   for (let d = from; dayNumber(d) <= dayNumber(to); d = addDays(d, 1)) dates.push(d);
@@ -109,7 +82,7 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
   };
 }
 
-// ---------- client ----------
+// ---------- cliente ----------
 
 export type FetchOptions = {
   fetchFn?: typeof fetch;
@@ -133,7 +106,7 @@ function retryDelay(res: Response, attempt: number): number {
 
 async function readCapped(res: Response, maxBytes: number): Promise<string> {
   const declared = Number(res.headers.get("content-length") ?? "0");
-  if (declared > maxBytes) throw new BoeError("response too large");
+  if (declared > maxBytes) throw new BoeError("respuesta demasiado grande");
   if (!res.body) return "";
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -143,14 +116,14 @@ async function readCapped(res: Response, maxBytes: number): Promise<string> {
     try {
       chunk = await reader.read();
     } catch (err) {
-      throw new BoeError(`reading the response failed (${errName(err)})`, { cause: errName(err) });
+      throw new BoeError(`falló la lectura de la respuesta (${errName(err)})`, { cause: errName(err) });
     }
     if (chunk.done) break;
     const value = chunk.value;
     total += value.byteLength;
     if (total > maxBytes) {
       await reader.cancel();
-      throw new BoeError("response too large");
+      throw new BoeError("respuesta demasiado grande");
     }
     chunks.push(value);
   }
@@ -174,7 +147,7 @@ export async function fetchSumario(isoDate: string, options: FetchOptions = {}):
         signal: AbortSignal.timeout(options.timeoutMs ?? TIMEOUT_MS),
       });
     } catch (err) {
-      throw new BoeError(`request failed for ${isoDate} (${errName(err)})`, { cause: errName(err) });
+      throw new BoeError(`falló la petición del ${isoDate} (${errName(err)})`, { cause: errName(err) });
     }
     if (res.status === 404) {
       await res.body?.cancel();
@@ -182,34 +155,34 @@ export async function fetchSumario(isoDate: string, options: FetchOptions = {}):
     }
     if (res.status === 429 || res.status >= 500) {
       await res.body?.cancel();
-      if (attempt >= BACKOFF_MS.length) throw new BoeError(`BOE answered ${res.status} for ${isoDate} after retries`);
+      if (attempt >= BACKOFF_MS.length) throw new BoeError(`el BOE respondió ${res.status} para el ${isoDate} tras los reintentos`);
       await sleep(retryDelay(res, attempt));
       continue;
     }
     if (res.status !== 200) {
       await res.body?.cancel();
-      throw new BoeError(`BOE answered ${res.status} for ${isoDate}`);
+      throw new BoeError(`el BOE respondió ${res.status} para el ${isoDate}`);
     }
     if (!(res.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) {
       await res.body?.cancel();
-      throw new BoeError(`unexpected content type for ${isoDate}`);
+      throw new BoeError(`tipo de contenido inesperado para el ${isoDate}`);
     }
-    let text: string;
+    let body: string;
     try {
-      text = await readCapped(res, maxBytes);
+      body = await readCapped(res, maxBytes);
     } catch (err) {
-      if (err instanceof BoeError) throw new BoeError(`${err.message} for ${isoDate}`, err.cause === undefined ? undefined : { cause: String(err.cause) });
-      throw new BoeError(`reading the response failed for ${isoDate} (${errName(err)})`, { cause: errName(err) });
+      if (err instanceof BoeError) throw new BoeError(`${err.message} (${isoDate})`, err.cause === undefined ? undefined : { cause: String(err.cause) });
+      throw new BoeError(`falló la lectura de la respuesta del ${isoDate} (${errName(err)})`, { cause: errName(err) });
     }
     try {
-      return { status: "ok", body: JSON.parse(text) as unknown, requests };
+      return { status: "ok", body: JSON.parse(body) as unknown, requests };
     } catch {
-      throw new BoeError(`invalid JSON for ${isoDate}`);
+      throw new BoeError(`JSON no válido para el ${isoDate}`);
     }
   }
 }
 
-// ---------- run loop ----------
+// ---------- bucle de ejecución ----------
 
 export type RunDeps = {
   fetchDay: (date: string) => Promise<FetchResult>;
@@ -230,7 +203,9 @@ export type RunSummary = {
   failedDates: string[];
 };
 
-// A BoeError fails only its day; anything else is unexpected: log its name, stop, exit code 1.
+// Un BoeError solo hace fallar su día; cualquier otro error es inesperado: se registra su nombre,
+// se detiene la ejecución y el código de salida es 1. El registro lleva solo recuentos, fechas y
+// estados, nunca texto de títulos.
 export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummary> {
   const summary: RunSummary = { exitCode: 0, requests: 0, stored: 0, failedDays: 0, failedDates: [] };
   for (let i = 0; i < input.dates.length && summary.stored < input.maxItems; i++) {
@@ -240,27 +215,28 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
       const result = await deps.fetchDay(date);
       summary.requests += result.requests;
       if (result.status === "empty") {
-        deps.log.info("No BOE for this day", { date });
+        deps.log.info("Sin BOE este día", { date });
         continue;
       }
       const { items, dropped } = parseSumario(result.body, date, deps.now());
       const room = items.slice(0, input.maxItems - summary.stored);
       if (room.length > 0) await deps.push(room);
       summary.stored += room.length;
-      deps.log.info("Day done", { date, found: items.length, stored: room.length, ...dropped });
+      for (const message of dropMessages(dropped)) deps.log.info(message, { date });
+      deps.log.info("Día completado", { date, found: items.length, stored: room.length, ...dropped });
     } catch (err) {
       if (err instanceof BoeError) {
         summary.failedDays++;
         summary.failedDates.push(date);
-        deps.log.error("Day failed", { date, reason: err.message });
+        deps.log.error("Día fallido", { date, reason: err.message });
       } else {
-        deps.log.error("Unexpected error", { date, name: errName(err) });
+        deps.log.error("Error inesperado", { date, name: errName(err) });
         summary.exitCode = 1;
         return summary;
       }
     }
   }
-  deps.log.info("Run finished", {
+  deps.log.info("Ejecución terminada", {
     days: input.dates.length,
     requests: summary.requests,
     stored: summary.stored,
@@ -268,87 +244,4 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
   });
   if (summary.failedDays > 0 && summary.failedDays === input.dates.length) summary.exitCode = 1;
   return summary;
-}
-
-// ---------- parser ----------
-
-type Obj = Record<string, unknown>;
-
-const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
-
-// The API returns a single object where there is one entry and an array where there are several.
-function many(v: unknown): Obj[] {
-  if (Array.isArray(v)) return v.filter(isObj);
-  return isObj(v) ? [v] : [];
-}
-
-function text(v: unknown): string {
-  return typeof v === "string" ? v.slice(0, MAX_TEXT) : "";
-}
-
-function boeUrl(v: unknown): string | null {
-  if (typeof v !== "string") return null;
-  let u: URL;
-  try {
-    u = new URL(v);
-  } catch {
-    return null;
-  }
-  if (u.protocol !== "https:" || u.hostname !== BOE_HOST || u.port !== "" || u.username !== "" || u.password !== "") {
-    return null;
-  }
-  return u.href;
-}
-
-export function parseSumario(json: unknown, date: string, retrievedAt: string): { items: OutputItem[]; dropped: Dropped } {
-  if (!isObj(json) || !isObj(json["data"]) || !isObj(json["data"]["sumario"])) {
-    throw new BoeError("unexpected summary document");
-  }
-  const diarios = json["data"]["sumario"]["diario"];
-  if (!Array.isArray(diarios)) throw new BoeError("unexpected summary document: no diario");
-  const items: OutputItem[] = [];
-  const dropped: Dropped = { badId: 0, badUrl: 0 };
-  for (const diario of many(diarios)) {
-    for (const seccion of many(diario["seccion"])) {
-      if (seccion["codigo"] !== "1") continue;
-      for (const dep of many(seccion["departamento"])) {
-        const groups: { epigraph: string; entries: Obj[] }[] = [
-          { epigraph: "", entries: many(dep["item"]) },
-          ...many(dep["epigrafe"]).map((ep) => ({ epigraph: text(ep["nombre"]), entries: many(ep["item"]) })),
-        ];
-        for (const group of groups) {
-          for (const entry of group.entries) {
-            const id = entry["identificador"];
-            if (typeof id !== "string" || !/^BOE-A-[0-9]{4}-[0-9]+$/.test(id)) {
-              dropped.badId++;
-              continue;
-            }
-            const pdf = isObj(entry["url_pdf"]) ? entry["url_pdf"]["texto"] : undefined;
-            const urlHtml = boeUrl(entry["url_html"]);
-            const urlPdf = boeUrl(pdf);
-            const urlXml = boeUrl(entry["url_xml"]);
-            if (urlHtml === null || urlPdf === null || urlXml === null) {
-              dropped.badUrl++;
-              continue;
-            }
-            items.push({
-              id,
-              date,
-              section: "1",
-              department: text(dep["nombre"]),
-              epigraph: group.epigraph,
-              title: text(entry["titulo"]),
-              urlHtml,
-              urlPdf,
-              urlXml,
-              retrievedAt,
-              source: SOURCE_LINE,
-              sourceUrl: SOURCE_URL,
-            });
-          }
-        }
-      }
-    }
-  }
-  return { items, dropped };
 }
