@@ -268,4 +268,4 @@ MIT: puedes usar, copiar, modificar y distribuir el código, incluso con fines c
 
 ## Contacto
 
-Dudas, errores o sugerencias: contacto@aiskaron.com
+Dudas, errores o sugerencias: abre una incidencia en [GitHub](https://github.com/saidcveltran/normawatch-boe/issues).
