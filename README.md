@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo/normawatch-icon.svg" alt="Icono de NormaWatch" width="112">
+<img src="https://normawatch.aiskaron.com/logo/normawatch-icon.svg" alt="Icono de NormaWatch" width="112">
 
 # NormaWatch
 
@@ -10,7 +10,7 @@
 
 </div>
 
-<p align="center"><img src="assets/muestras/portada.png" alt="Vista de ejemplo de NormaWatch con cuatro filas de datos reales del BOE (fecha, tipo de norma y título)" width="100%"></p>
+<p align="center"><img src="https://normawatch.aiskaron.com/muestras/portada.png" alt="Vista de ejemplo de NormaWatch con cuatro filas de datos reales del BOE (fecha, tipo de norma y título)" width="100%"></p>
 
 **NormaWatch** es un **Actor de Apify** (así llama Apify a los programas que se ejecutan en su plataforma) que lista las nuevas **disposiciones generales** (sección I) del Boletín Oficial del Estado (BOE), solo con metadatos y enlaces, para que puedas vigilar la normativa nueva sin leer el sumario cada día. Está pensado para quien sigue la normativa española: asesorías, despachos, equipos de cumplimiento normativo y periodistas. Es **gratuito**: no tiene precio ni suscripción.
 
@@ -145,11 +145,11 @@ Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra 
 
 Representación de la vista Resumen con datos reales del BOE de los días 16, 17 y 19 de octubre de 2026, obtenidos con una ejecución real del Actor (no es una captura de la consola de Apify).
 
-![Representación de la vista Resumen con datos reales del BOE](assets/muestras/tabla-resumen.png)
+![Representación de la vista Resumen con datos reales del BOE](https://normawatch.aiskaron.com/muestras/tabla-resumen.png)
 
 Una disposición completa en JSON: son datos reales del BOE del 16 de octubre de 2026.
 
-![Ficha JSON de una disposición con datos reales del BOE](assets/muestras/ficha-json.png)
+![Ficha JSON de una disposición con datos reales del BOE](https://normawatch.aiskaron.com/muestras/ficha-json.png)
 
 ## Cómo funciona `onlyNew`
 
