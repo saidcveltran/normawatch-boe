@@ -11,7 +11,8 @@ Es gratuita: no tiene precio ni suscripción. Las ejecuciones consumen los recur
 - Consulta el sumario diario del BOE (API de datos abiertos) para las fechas que indiques.
 - Se queda solo con la **sección I (Disposiciones generales)**.
 - Devuelve, por cada disposición, sus **metadatos y los enlaces** oficiales en HTML, PDF y XML.
-- Permite filtrar por departamento y por palabras del título, y entregar solo lo que no se había entregado antes (`onlyNew`).
+- Permite filtrar por departamento, por palabras del título y por tipo de norma, y entregar solo lo que no se había entregado antes (`onlyNew`).
+- Muestra el resultado como una tabla en la consola de Apify (ver [Vista de tabla](#vista-de-tabla-en-la-consola-de-apify)).
 
 ## Qué no hace
 
@@ -34,11 +35,12 @@ Todos los campos son opcionales. Una entrada vacía devuelve las disposiciones d
 | `dateTo` | texto `AAAA-MM-DD` | el valor de `dateFrom` | No puede ser anterior a `dateFrom` ni posterior a hoy; como máximo 31 días después de `dateFrom`. |
 | `departments` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su departamento contiene alguno de los textos (sin distinguir mayúsculas; texto literal, no expresión regular). |
 | `keywords` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su título contiene alguno de los textos (sin distinguir mayúsculas; texto literal). |
+| `normTypes` | lista de tipos de norma | sin filtro (todos los tipos) | Selector múltiple. Valores admitidos, tal como los escribe el BOE: `Corrección de errores`, `Instrumento de ratificación`, `Real Decreto Legislativo`, `Real Decreto-ley`, `Real Decreto`, `Ley Orgánica`, `Ley Foral`, `Ley`, `Decreto Legislativo`, `Decreto-ley`, `Decreto`, `Orden`, `Resolución`, `Circular`, `Acuerdo internacional` y `Otro`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Tipo de norma](#tipo-de-norma-derivado). |
 | `onlyNew` | verdadero o falso | `false` | Ver [Cómo funciona `onlyNew`](#cómo-funciona-onlynew). |
 | `maxItems` | entero | `500` | De 1 a 10 000. La ejecución se detiene al alcanzar este número de elementos. |
 | `requestDelayMs` | entero | `1000` | De 500 a 10 000. Pausa en milisegundos entre dos peticiones al BOE. |
 
-Si se rellenan `departments` y `keywords` a la vez, el elemento debe cumplir las dos listas (dentro de cada lista basta una coincidencia). Las entradas en blanco se ignoran.
+Si se rellenan varios de los filtros `departments`, `keywords` y `normTypes`, el elemento debe cumplir todos (dentro de cada lista basta una coincidencia). Las entradas en blanco se ignoran.
 
 Ejemplo de entrada (ejemplo ilustrativo, en el formato de entrada de Apify):
 
@@ -55,7 +57,7 @@ Ejemplo de entrada (ejemplo ilustrativo, en el formato de entrada de Apify):
 
 ## Salida
 
-Cada elemento del conjunto de datos tiene estos 12 campos:
+Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivado `normType` (ver la tabla siguiente):
 
 | Campo | Descripción |
 |---|---|
@@ -71,6 +73,7 @@ Cada elemento del conjunto de datos tiene estos 12 campos:
 | `retrievedAt` | Campo derivado: momento (ISO 8601, UTC) en que el Actor obtuvo el dato. No procede del BOE. |
 | `source` | Línea de fuente: `Fuente de los datos: Agencia Estatal Boletín Oficial del Estado`. |
 | `sourceUrl` | `https://www.boe.es`. |
+| `normType` | Campo derivado (desde la versión 1.1): tipo de norma que el Actor deduce del inicio del título, por ejemplo `Real Decreto-ley` u `Orden`. No es un metadato del BOE. Vale `Otro` si no se reconoce ningún tipo. |
 
 Los enlaces solo se conservan si apuntan a `https://www.boe.es`.
 
@@ -88,17 +91,28 @@ Elemento de ejemplo (**inventado**, solo para mostrar el formato; no corresponde
   "urlPdf": "https://www.boe.es/boe/dias/2026/10/16/pdfs/BOE-A-2026-99999.pdf",
   "urlXml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-99999",
   "retrievedAt": "2026-10-16T09:30:00.000Z",
+  "normType": "Orden",
   "source": "Fuente de los datos: Agencia Estatal Boletín Oficial del Estado",
   "sourceUrl": "https://www.boe.es"
 }
 ```
+
+## Tipo de norma (derivado)
+
+El BOE no publica el tipo de norma en el sumario, así que el Actor lo deriva del título: compara el inicio del título con una lista fija de tipos, de más largo a más corto (`Real Decreto-ley` antes que `Real Decreto`, `Ley Orgánica` antes que `Ley`). Los títulos que empiezan por «Corrección de errores» son de ese tipo, sea cual sea la norma corregida. `Acuerdo internacional` solo se asigna a títulos que empiezan por «Acuerdo», «Canje de Notas» o «Convenio» del departamento de Asuntos Exteriores. Lo que no encaja en ninguno es `Otro`.
+
+Es un campo derivado por este Actor, no un dato del BOE, y puede equivocarse: por ejemplo, un título que no empiece por el nombre de la norma (como una sentencia o un acuerdo de otro departamento) se clasifica como `Otro`, y los tipos que el BOE escribe de otra forma no se reconocen. Si lo reutilizas, indícalo como derivado.
+
+## Vista de tabla en la consola de Apify
+
+Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra una tabla con la vista **Resumen**: fecha, tipo de norma (derivado), departamento, título, enlace al PDF y enlace «Ver en el BOE». La vista **Todos los campos** muestra los 12 campos y `normType`, con los enlaces como enlaces. Las vistas solo cambian cómo se ve el resultado en la consola; los datos que descargas (JSON, CSV…) y la API no cambian.
 
 ## Cómo funciona `onlyNew`
 
 Con `onlyNew: true`, el Actor omite las disposiciones que ya entregó en ejecuciones anteriores de tu cuenta. Está pensado para ejecuciones programadas (por ejemplo, una al día).
 
 - Recuerda los identificadores en el almacén clave-valor con nombre `SEEN`, de tu propia cuenta de Apify.
-- Mantiene **una memoria por cada combinación de filtros** (`departments` y `keywords`): dos configuraciones distintas no se ocultan elementos entre sí. El orden de las entradas y las mayúsculas no cuentan.
+- Mantiene **una memoria por cada combinación de filtros** (`departments`, `keywords` y, solo si lo usas, `normTypes`): dos configuraciones distintas no se ocultan elementos entre sí. El orden de las entradas y las mayúsculas no cuentan. Quien no usa `normTypes` conserva la memoria que ya tenía.
 - Cada memoria guarda hasta **50 000** identificadores; al superarlos se olvidan los más antiguos.
 - Solo se recuerdan los elementos **realmente entregados**: los que quedan fuera por los filtros o por `maxItems` se podrán entregar en una ejecución posterior.
 - Con `onlyNew: false` no se lee ni se escribe `SEEN`.
@@ -142,7 +156,7 @@ Si reutilizas estos datos, mantén estas condiciones de la reutilización de la 
 - No desnaturalices el sentido de la información: mantén sin alterar fechas, títulos y enlaces.
 - No presentes el resultado como un texto oficial.
 - Si modificas la información, hazlo de forma que se distinga qué elementos no proceden del original.
-- Indica como derivado cualquier campo que añadas tú. En este Actor, `retrievedAt` es derivado.
+- Indica como derivado cualquier campo que añadas tú. En este Actor, `retrievedAt` y `normType` son derivados.
 - No sugieras que el BOE o la Agencia respaldan tu producto o tu uso de los datos.
 
 Estas condiciones resumen el aviso legal del BOE, cuyo texto es la fuente de referencia: <https://www.boe.es/informacion/aviso_legal/index.php>.

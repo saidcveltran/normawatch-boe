@@ -1,0 +1,122 @@
+{
+  "actorSpecification": 1,
+  "fields": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Identificador",
+        "description": "Identificador del BOE, con la forma BOE-A-AAAA-N."
+      },
+      "date": {
+        "type": "string",
+        "title": "Fecha",
+        "description": "Fecha de publicación del sumario (AAAA-MM-DD)."
+      },
+      "section": {
+        "type": "string",
+        "title": "Sección",
+        "description": "Sección del BOE; este Actor solo lee la sección I."
+      },
+      "department": {
+        "type": "string",
+        "title": "Departamento",
+        "description": "Departamento que emite la disposición, tal como lo publica el BOE."
+      },
+      "epigraph": {
+        "type": "string",
+        "title": "Epígrafe",
+        "description": "Epígrafe bajo el que aparece la disposición, o texto vacío si no tiene."
+      },
+      "title": {
+        "type": "string",
+        "title": "Título",
+        "description": "Título de la disposición, sin modificar."
+      },
+      "urlHtml": {
+        "type": "string",
+        "title": "Enlace HTML",
+        "description": "Enlace a la versión HTML en www.boe.es. Puede faltar."
+      },
+      "urlPdf": {
+        "type": "string",
+        "title": "Enlace PDF",
+        "description": "Enlace al PDF en www.boe.es. Puede faltar."
+      },
+      "urlXml": {
+        "type": "string",
+        "title": "Enlace XML",
+        "description": "Enlace al XML en www.boe.es. Puede faltar."
+      },
+      "retrievedAt": {
+        "type": "string",
+        "title": "Obtenido el",
+        "description": "Campo derivado: momento (ISO 8601, UTC) en que el Actor obtuvo el dato. No procede del BOE."
+      },
+      "source": {
+        "type": "string",
+        "title": "Fuente",
+        "description": "Línea de fuente de los datos: Agencia Estatal Boletín Oficial del Estado."
+      },
+      "sourceUrl": {
+        "type": "string",
+        "title": "Dirección de la fuente",
+        "description": "Dirección de la fuente de los datos: https://www.boe.es."
+      },
+      "normType": {
+        "type": "string",
+        "title": "Tipo de norma (derivado)",
+        "description": "Campo derivado del título por este Actor; no es un metadato del BOE."
+      }
+    },
+    "additionalProperties": true
+  },
+  "views": {
+    "resumen": {
+      "title": "Resumen",
+      "description": "Fecha, tipo de norma, departamento, título y enlaces de cada disposición.",
+      "transformation": {
+        "fields": ["date", "normType", "department", "title", "urlPdf", "urlHtml"]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "date": { "label": "Fecha", "format": "date" },
+          "normType": { "label": "Tipo de norma (derivado)", "format": "text" },
+          "department": { "label": "Departamento", "format": "text" },
+          "title": { "label": "Título", "format": "text" },
+          "urlPdf": { "label": "PDF", "format": "link" },
+          "urlHtml": { "label": "Ver en el BOE", "format": "link" }
+        }
+      }
+    },
+    "completo": {
+      "title": "Todos los campos",
+      "description": "Todos los campos de cada disposición.",
+      "transformation": {
+        "fields": [
+          "id", "date", "section", "department", "epigraph", "title", "normType",
+          "urlHtml", "urlPdf", "urlXml", "retrievedAt", "source", "sourceUrl"
+        ]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "id": { "label": "Identificador", "format": "text" },
+          "date": { "label": "Fecha", "format": "date" },
+          "section": { "label": "Sección", "format": "text" },
+          "department": { "label": "Departamento", "format": "text" },
+          "epigraph": { "label": "Epígrafe", "format": "text" },
+          "title": { "label": "Título", "format": "text" },
+          "normType": { "label": "Tipo de norma (derivado)", "format": "text" },
+          "urlHtml": { "label": "Ver en el BOE", "format": "link" },
+          "urlPdf": { "label": "PDF", "format": "link" },
+          "urlXml": { "label": "XML", "format": "link" },
+          "retrievedAt": { "label": "Obtenido el (derivado)", "format": "date" },
+          "source": { "label": "Fuente", "format": "text" },
+          "sourceUrl": { "label": "Dirección de la fuente", "format": "link" }
+        }
+      }
+    }
+  }
+}

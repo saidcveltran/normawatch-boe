@@ -6,6 +6,19 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.1.0] - 2026-10-20
+
+### Añadido
+
+- Vista de tabla en la consola de Apify: esquema del conjunto de datos con la vista «Resumen» (fecha, tipo de norma, departamento, título y enlaces al PDF y al BOE) y la vista «Todos los campos», más un esquema de salida que muestra la tabla en la pestaña de resultados. Las vistas solo afectan a la consola, no a las exportaciones JSON o CSV.
+- Campo de entrada `normTypes`: filtra por tipo de norma (Ley, Ley Orgánica, Real Decreto, Real Decreto-ley, Orden, Resolución…). Vacío significa todos los tipos; un valor no admitido es una entrada no válida (código de salida 2).
+- Campo de salida `normType`, derivado por el Actor a partir del inicio del título y marcado como derivado; no es un metadato del BOE. Los 12 campos anteriores conservan nombres y valores.
+- La memoria `SEEN` distingue también el filtro `normTypes`, pero solo cuando se usa: quien no lo use conserva la memoria que ya tenía.
+
+### Cambiado
+
+- Versión 1.1.0; el `User-Agent` pasa a `normawatch-boe/1.1`.
+
 ## [1.0.0] - 2026-10-20
 
 ### Añadido

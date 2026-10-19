@@ -32,10 +32,55 @@
       "editor": "stringList",
       "maxItems": 50
     },
+    "normTypes": {
+      "title": "Tipos de norma",
+      "type": "array",
+      "description": "Conserva solo las disposiciones de los tipos elegidos. El tipo lo deriva este Actor del inicio del título (no es un metadato del BOE) y puede equivocarse en títulos poco habituales. Vacío significa todos los tipos.",
+      "editor": "select",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Corrección de errores",
+          "Instrumento de ratificación",
+          "Real Decreto Legislativo",
+          "Real Decreto-ley",
+          "Real Decreto",
+          "Ley Orgánica",
+          "Ley Foral",
+          "Ley",
+          "Decreto Legislativo",
+          "Decreto-ley",
+          "Decreto",
+          "Orden",
+          "Resolución",
+          "Circular",
+          "Acuerdo internacional",
+          "Otro"
+        ],
+        "enumTitles": [
+          "Corrección de errores",
+          "Instrumento de ratificación",
+          "Real Decreto Legislativo",
+          "Real Decreto-ley",
+          "Real Decreto",
+          "Ley Orgánica",
+          "Ley Foral",
+          "Ley",
+          "Decreto Legislativo",
+          "Decreto-ley",
+          "Decreto",
+          "Orden",
+          "Resolución",
+          "Circular",
+          "Acuerdo internacional",
+          "Otro (sin tipo reconocido)"
+        ]
+      }
+    },
     "onlyNew": {
       "title": "Solo elementos nuevos",
       "type": "boolean",
-      "description": "Si está activado, omite los elementos que ya se entregaron en ejecuciones anteriores de tu cuenta, recordados por su identificador en el almacén clave-valor con nombre SEEN, con una memoria por cada combinación de departamentos y palabras clave (hasta 50 000 identificadores en cada una; al superarlos se olvidan los más antiguos). Solo se recuerdan los elementos realmente entregados: los que quedan fuera por los filtros o por el máximo de elementos se podrán entregar en una ejecución posterior. Si está desactivado, no se lee ni se escribe SEEN. En cualquier caso, un mismo identificador se entrega una sola vez por ejecución.",
+      "description": "Si está activado, omite los elementos que ya se entregaron en ejecuciones anteriores de tu cuenta, recordados por su identificador en el almacén clave-valor con nombre SEEN, con una memoria por cada combinación de departamentos y palabras clave (y de tipos de norma, si eliges alguno) (hasta 50 000 identificadores en cada una; al superarlos se olvidan los más antiguos). Solo se recuerdan los elementos realmente entregados: los que quedan fuera por los filtros o por el máximo de elementos se podrán entregar en una ejecución posterior. Si está desactivado, no se lee ni se escribe SEEN. En cualquier caso, un mismo identificador se entrega una sola vez por ejecución.",
       "default": false
     },
     "maxItems": {

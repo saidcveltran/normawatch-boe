@@ -1,6 +1,8 @@
 // Analizador del sumario del BOE. Solo biblioteca estándar.
 // Conserva únicamente metadatos y enlaces de la sección I; nunca texto íntegro ni nombres de firmantes.
 import { BoeError } from "./errors.ts";
+import { normTypeOf } from "./classify.ts";
+import type { NormType } from "./classify.ts";
 
 export const SOURCE_LINE = "Fuente de los datos: Agencia Estatal Boletín Oficial del Estado";
 export const SOURCE_URL = "https://www.boe.es";
@@ -36,6 +38,8 @@ export type OutputItem = {
   retrievedAt: string;
   source: string;
   sourceUrl: string;
+  // Campo derivado por este Actor a partir del título; no es un metadato del BOE.
+  normType: NormType;
 };
 
 // Recuentos de lo descartado: identificador no válido, enlace no válido, filtro de nombres y texto demasiado largo.
@@ -170,6 +174,7 @@ export function parseSumario(json: unknown, date: string, retrievedAt: string): 
               retrievedAt,
               source: SOURCE_LINE,
               sourceUrl: SOURCE_URL,
+              normType: normTypeOf(title, department),
             });
           }
         }

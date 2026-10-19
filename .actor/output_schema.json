@@ -1,0 +1,13 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Resultado de NormaWatch",
+  "description": "Disposiciones generales del BOE (sección I) encontradas en la ejecución.",
+  "properties": {
+    "disposiciones": {
+      "type": "string",
+      "title": "Disposiciones del BOE",
+      "description": "Tabla con las disposiciones entregadas por esta ejecución.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items?view=resumen"
+    }
+  }
+}

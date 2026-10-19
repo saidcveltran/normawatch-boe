@@ -5,7 +5,7 @@ import { BoeError, errName } from "./errors.ts";
 import { validDate } from "./input.ts";
 
 export const BASE_URL = "https://www.boe.es/datosabiertos/api/boe/sumario/";
-export const USER_AGENT = "normawatch-boe/1.0 (+https://aiskaron.com/en/tools/normawatch-boe/)";
+export const USER_AGENT = "normawatch-boe/1.1 (+https://aiskaron.com/en/tools/normawatch-boe/)";
 
 export const TIMEOUT_MS = 30_000;
 export const MAX_BYTES = 4 * 1024 * 1024;

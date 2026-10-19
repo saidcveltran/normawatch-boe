@@ -1,6 +1,7 @@
 // Validación y normalización de la entrada del Actor. Solo biblioteca estándar.
 // Cada campo se comprueba antes de hacer ninguna petición; una entrada incorrecta falla con un mensaje claro.
 import { BoeError } from "./errors.ts";
+import { isNormType, normTypeOf } from "./classify.ts";
 
 export const MAX_RANGE_DAYS = 31;
 export const DEFAULT_MAX_ITEMS = 500;
@@ -20,6 +21,8 @@ export type RunInput = {
   // Textos en minúsculas; solo aparecen cuando hay algún filtro.
   departments?: string[];
   keywords?: string[];
+  // Tipos de norma del BOE (valores exactos de la lista cerrada); solo aparece cuando hay alguno.
+  normTypes?: string[];
 };
 
 export type NormalizedInput = {
@@ -30,9 +33,10 @@ export type NormalizedInput = {
   onlyNew: boolean;
   departments: string[];
   keywords: string[];
+  normTypes: string[];
 };
 
-export type Filters = { departments?: string[]; keywords?: string[] };
+export type Filters = { departments?: string[]; keywords?: string[]; normTypes?: string[] };
 
 // ---------- fechas ----------
 
@@ -106,6 +110,21 @@ function listField(input: Record<string, unknown>, name: string): string[] {
   return out;
 }
 
+// Tipos de norma: cada entrada debe ser exactamente uno de los valores de la lista cerrada; si no, la
+// entrada es incorrecta. Los repetidos se unifican y la lista vacía significa todos los tipos.
+function normTypesField(input: Record<string, unknown>): string[] {
+  const v = input["normTypes"];
+  if (v === undefined || v === null) return [];
+  if (!Array.isArray(v)) throw new BoeError("normTypes debe ser una lista de tipos de norma");
+  if (v.length > MAX_LIST_ENTRIES) throw new BoeError(`normTypes admite como máximo ${MAX_LIST_ENTRIES} entradas`);
+  const out: string[] = [];
+  for (const entry of v) {
+    if (!isNormType(entry)) throw new BoeError("normTypes contiene un tipo de norma no admitido");
+    if (!out.includes(entry)) out.push(entry);
+  }
+  return out;
+}
+
 // Aplica los valores por defecto y comprueba todos los límites.
 export function normalizeInput(input: Record<string, unknown>, today: string): NormalizedInput {
   const dateFrom = dateField(input, "dateFrom") ?? today;
@@ -124,6 +143,7 @@ export function normalizeInput(input: Record<string, unknown>, today: string): N
     onlyNew: boolField(input, "onlyNew"),
     departments: listField(input, "departments"),
     keywords: listField(input, "keywords"),
+    normTypes: normTypesField(input),
   };
 }
 
@@ -138,6 +158,7 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
     ...(n.onlyNew ? { onlyNew: true as const } : {}),
     ...(n.departments.length > 0 ? { departments: n.departments } : {}),
     ...(n.keywords.length > 0 ? { keywords: n.keywords } : {}),
+    ...(n.normTypes.length > 0 ? { normTypes: n.normTypes } : {}),
   };
 }
 
@@ -145,8 +166,12 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
 
 // Coincidencia por subcadena en minúsculas y NFC, nunca como expresión regular: una palabra clave
 // con forma de patrón se trata como texto literal. Dentro de cada lista basta una coincidencia;
-// entre listas deben cumplirse las dos.
-export function matchesFilters(item: { department: string; title: string }, filters: Filters): boolean {
+// entre listas deben cumplirse todas. El tipo de norma se compara con el valor exacto de la lista cerrada;
+// si el elemento aún no lo trae, se deriva del título.
+export function matchesFilters(
+  item: { department: string; title: string; normType?: string },
+  filters: Filters,
+): boolean {
   if (filters.departments !== undefined && filters.departments.length > 0) {
     const dep = item.department.normalize("NFC").toLowerCase();
     if (!filters.departments.some((d) => dep.includes(d))) return false;
@@ -154,6 +179,10 @@ export function matchesFilters(item: { department: string; title: string }, filt
   if (filters.keywords !== undefined && filters.keywords.length > 0) {
     const title = item.title.normalize("NFC").toLowerCase();
     if (!filters.keywords.some((k) => title.includes(k))) return false;
+  }
+  if (filters.normTypes !== undefined && filters.normTypes.length > 0) {
+    const type = item.normType ?? normTypeOf(item.title, item.department);
+    if (!filters.normTypes.includes(type)) return false;
   }
   return true;
 }
