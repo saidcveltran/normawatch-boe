@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test",
     "check": "npm run typecheck && npm run test",
-    "start": "node src/main.ts"
+    "start": "node src/main.ts",
+    "deps:check": "node scripts/supply-chain-check.mjs"
   },
   "dependencies": {
     "apify": "3.7.2"
@@ -23,6 +24,14 @@
     "typescript": "5.9.3"
   },
   "overrides": {
+    "baseline-browser-mapping": "2.11.28",
+    "browserslist": "4.29.3",
+    "caniuse-lite": "1.0.30001815",
+    "electron-to-chromium": "1.5.452",
+    "generative-bayesian-network": "2.1.88",
+    "header-generator": "2.1.88",
+    "node-releases": "2.0.58",
+    "strtok3": "10.4.1",
     "get-uri": {
       "basic-ftp": "6.2.3"
     }

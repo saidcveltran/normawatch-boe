@@ -6,7 +6,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [1.0.0] (candidata, sin publicar)
+## [1.0.0] - 2026-10-20
 
 ### Añadido
 
@@ -20,6 +20,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Códigos de salida: 0 (correcto), 1 (fallo de la ejecución) y 2 (entrada no válida).
 - Documentación en castellano (`README.md`) con la atribución al BOE, el aviso de que no es un servicio oficial y la sección de datos personales.
 - Licencia MIT.
+
+### Cambiado
+
+- Las 8 dependencias indirectas de producción que tenían menos de 7 días de antigüedad (`baseline-browser-mapping`, `browserslist`, `caniuse-lite`, `electron-to-chromium`, `generative-bayesian-network`, `header-generator`, `node-releases` y `strtok3`) se fijan con `overrides` a versiones de más de 7 días.
 
 ### Corregido
 

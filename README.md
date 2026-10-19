@@ -169,3 +169,7 @@ MIT: puedes usar, copiar, modificar y distribuir el código, incluso con fines c
 ## Contacto
 
 Dudas, errores o sugerencias: contacto@aiskaron.com
+
+## Mantenimiento
+
+Tras cualquier cambio en las dependencias (`package.json` o `package-lock.json`), ejecuta `npm run deps:check` antes de confirmar los cambios. El control comprueba la antigüedad mínima de 7 días de los paquetes añadidos o cambiados respecto a la última versión publicada (instantánea `scripts/last-release-ls.json`), además de `npm audit` y OSV.
