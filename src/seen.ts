@@ -36,11 +36,14 @@ export class SeenStore {
   private readonly ids: Set<string>;
   private readonly backend: SeenBackend;
   private readonly max: number;
+  // Verdadero si la lectura inicial falló: entonces no se conoce lo que había guardado.
+  private readonly openFailed: boolean;
 
-  private constructor(backend: SeenBackend, ids: Set<string>, max: number) {
+  private constructor(backend: SeenBackend, ids: Set<string>, max: number, openFailed: boolean = false) {
     this.backend = backend;
     this.ids = ids;
     this.max = max;
+    this.openFailed = openFailed;
   }
 
   // Un valor guardado que no sea una lista se ignora (memoria vacía); en una lista se conservan
@@ -52,7 +55,7 @@ export class SeenStore {
       raw = await backend.read();
     } catch {
       warn?.("SEEN ilegible, se empieza vacío");
-      return new SeenStore(backend, new Set<string>(), max);
+      return new SeenStore(backend, new Set<string>(), max, true);
     }
     if (raw !== undefined && raw !== null && !Array.isArray(raw)) warn?.("SEEN ilegible, se empieza vacío");
     return new SeenStore(backend, parseIds(raw), max);
@@ -67,10 +70,11 @@ export class SeenStore {
   async add(newIds: string[]): Promise<void> {
     if (newIds.length === 0) return;
     let stored = new Set<string>();
+    let rereadFailed = false;
     try {
       stored = parseIds(await this.backend.read());
     } catch {
-      // Sin lectura se guarda lo que se conoce.
+      rereadFailed = true;
     }
     for (const id of this.ids) stored.add(id);
     for (const id of newIds) {
@@ -84,6 +88,11 @@ export class SeenStore {
     }
     this.ids.clear();
     for (const id of stored) this.ids.add(id);
+    // Si no se pudo leer ni al abrir ni ahora, la lista de memoria es solo parcial: escribirla
+    // borraría lo que hubiera guardado. Se omite la escritura y se avisa con un error sin contenido.
+    if (rereadFailed && this.openFailed) {
+      throw new Error("SEEN no se pudo leer: no se guarda para no sobrescribir la lista existente");
+    }
     await this.backend.write([...stored]);
   }
 }

@@ -1,0 +1,24 @@
+# Registro de cambios
+
+Todos los cambios relevantes de este proyecto se anotan aquí.
+
+El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto aspira a seguir el [versionado semántico](https://semver.org/lang/es/).
+
+## [Sin publicar]
+
+### Añadido
+
+- Lectura del sumario diario del BOE (API de datos abiertos) para un intervalo en el que la fecha final es como máximo 31 días posterior a la inicial, limitada a la sección I (disposiciones generales).
+- Salida con 12 campos por elemento: metadatos y enlaces (`urlHtml`, `urlPdf`, `urlXml`), sin texto íntegro, con la línea de fuente `source` y `sourceUrl` en cada elemento.
+- Entrada validada antes de hacer ninguna petición: `dateFrom`, `dateTo`, `departments`, `keywords`, `onlyNew`, `maxItems` y `requestDelayMs`, con sus valores por defecto y límites.
+- Filtros por departamento y por palabras del título, con coincidencia literal sin distinguir mayúsculas.
+- Modo `onlyNew`: memoria de elementos ya entregados en el almacén clave-valor `SEEN`, una por cada combinación de filtros, con tope de 50 000 identificadores.
+- Filtro de nombres que descarta los títulos con tratamientos personales, y descarte de identificadores o enlaces que no sean del BOE y de textos demasiado largos, con registro de solo recuentos.
+- Cliente HTTP respetuoso: una petición a la vez, pausa mínima de 500 ms, tiempo máximo de 30 s, hasta 3 reintentos con espera creciente ante 429 o 5xx (respetando `Retry-After`), límite de tamaño de respuesta y `User-Agent` propio.
+- Códigos de salida: 0 (correcto), 1 (fallo de la ejecución) y 2 (entrada no válida).
+- Documentación en castellano (`README.md`) con la atribución al BOE, el aviso de que no es un servicio oficial y la sección de datos personales.
+- Licencia MIT.
+
+### Corregido
+
+- `SEEN` ya no se sobrescribe con una lista parcial cuando no se pudo leer ni al abrir ni al guardar: no se escribe nada y la ejecución termina con código de salida 1.
