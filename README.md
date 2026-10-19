@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo/normawatch-logo.svg" alt="NormaWatch" width="240"></p>
+
 # NormaWatch
 
 Herramienta gratuita (Actor de Apify) que lista las nuevas disposiciones generales (sección I) publicadas en el Boletín Oficial del Estado (BOE), solo con metadatos y enlaces, para que puedas vigilar la normativa nueva sin leer el sumario cada día. «Actor» es el nombre que da Apify a los programas que se ejecutan en su plataforma.
@@ -106,6 +108,16 @@ Es un campo derivado por este Actor, no un dato del BOE, y puede equivocarse: po
 ## Vista de tabla en la consola de Apify
 
 Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra una tabla con la vista **Resumen**: fecha, tipo de norma (derivado), departamento, título, enlace al PDF y enlace «Ver en el BOE». La vista **Todos los campos** muestra los 12 campos y `normType`, con los enlaces como enlaces. Las vistas solo cambian cómo se ve el resultado en la consola; los datos que descargas (JSON, CSV…) y la API no cambian.
+
+## Ejemplo de resultado
+
+Tabla con la vista Resumen: son datos reales del BOE de los días 16, 17 y 19 de octubre de 2026, obtenidos con una ejecución real del Actor.
+
+![Tabla de resultados con datos reales del BOE](assets/muestras/tabla-resumen.png)
+
+Una disposición completa en JSON: son datos reales del BOE del 16 de octubre de 2026.
+
+![Ficha JSON de una disposición con datos reales del BOE](assets/muestras/ficha-json.png)
 
 ## Cómo funciona `onlyNew`
 

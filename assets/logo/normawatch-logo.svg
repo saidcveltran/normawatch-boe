@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<title>NormaWatch</title>
+<defs>
+<clipPath id="a1-half"><rect x="0" y="-10" width="200" height="500"/></clipPath>
+<linearGradient id="a1-bl" gradientUnits="userSpaceOnUse" x1="0" y1="116" x2="0" y2="372"><stop offset="0" stop-color="#2F5FE0"/><stop offset="1" stop-color="#1636B5"/></linearGradient>
+<linearGradient id="a1-bs" gradientUnits="userSpaceOnUse" x1="0" y1="116" x2="0" y2="372"><stop offset="0" stop-color="#14308F"/><stop offset="1" stop-color="#0B1A5C"/></linearGradient>
+<radialGradient id="a1-glow" gradientUnits="userSpaceOnUse" cx="0" cy="70" r="46"><stop offset="0" stop-color="#fff" stop-opacity="0.9"/><stop offset="0.35" stop-color="#7FE9FF" stop-opacity="0.35"/><stop offset="1" stop-color="#0AB8D8" stop-opacity="0"/></radialGradient>
+<radialGradient id="a1-pane" gradientUnits="userSpaceOnUse" cx="0" cy="70" r="26"><stop offset="0" stop-color="#7FE9FF" stop-opacity="0.95"/><stop offset="0.5" stop-color="#0AB8D8" stop-opacity="0.55"/><stop offset="1" stop-color="#1636B5" stop-opacity="0"/></radialGradient>
+<linearGradient id="a1-beam" gradientUnits="userSpaceOnUse" x1="128" y1="122" x2="442.03" y2="223.43"><stop offset="0" stop-color="#0AB8D8" stop-opacity="0.55"/><stop offset="1" stop-color="#0AB8D8" stop-opacity="0.05"/></linearGradient>
+<radialGradient id="a1-rg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#00E58C" stop-opacity="0.45"/><stop offset="1" stop-color="#00E58C" stop-opacity="0"/></radialGradient>
+</defs>
+<!-- beam behind rows, emerging from the lamp -->
+<path d="M128 122 L457.24 144.45 L408.16 296.38 Z" fill="url(#a1-beam)"/>
+<ellipse cx="372" cy="200" rx="120" ry="46" fill="url(#a1-rg)"/>
+<circle cx="296" cy="152" r="6" fill="#0AB8D8"/>
+<rect x="316" y="145" width="108" height="14" rx="7" fill="#0AB8D8"/>
+<circle cx="296" cy="248" r="6" fill="#0AB8D8"/>
+<rect x="316" y="241" width="88" height="14" rx="7" fill="#0AB8D8"/>
+<circle cx="296" cy="200" r="14" fill="#00E58C"/>
+<path d="M290.5 200.5 L294.2 204.2 L301.5 195.8" fill="none" stroke="#0B1020" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="322" y="188" width="114" height="24" rx="12" fill="#00E58C"/>
+<path d="M448 158 Q449.92 168.08 460 170 Q449.92 171.92 448 182 Q446.08 171.92 436 170 Q446.08 168.08 448 158 Z" fill="#00E58C"/>
+<g transform="translate(128 52) scale(1)">
+<rect x="-3" y="2" width="6" height="14" rx="3" fill="#2A57D6"/>
+<path d="M-35 46 L0 12 L35 46 Z" fill="#0AB8D8" stroke="#0AB8D8" stroke-width="4" stroke-linejoin="round"/>
+<rect x="-24" y="46" width="48" height="48" rx="3" fill="#2A57D6"/>
+<rect x="-42" y="83" width="16" height="4" rx="2" fill="#2A57D6"/>
+<rect x="26" y="83" width="16" height="4" rx="2" fill="#2A57D6"/>
+<rect x="-42" y="86" width="4" height="8" fill="#2A57D6"/>
+<rect x="38" y="86" width="4" height="8" fill="#2A57D6"/>
+<rect x="-42" y="94" width="84" height="12" rx="4" fill="#2A57D6"/>
+<path d="M-32 106 L32 106 L28 116 L-28 116 Z" fill="#1B3FB8"/>
+<path d="M-28 116 L28 116 L46 372 L-46 372 Z" fill="url(#a1-bl)"/>
+<path d="M-33.62 196 L33.62 196 L34.75 212 L-34.75 212 Z" fill="#0AB8D8"/>
+<path d="M-43.05 330 L43.05 330 L43.61 338 L-43.61 338 Z" fill="#0B1020" fill-opacity="0.16"/>
+<rect x="-58" y="372" width="116" height="18" rx="5" fill="#2A57D6"/>
+<rect x="-70" y="388" width="140" height="16" rx="6" fill="#2A57D6"/>
+<g clip-path="url(#a1-half)">
+<rect x="-3" y="2" width="6" height="14" rx="3" fill="#0F2680"/>
+<path d="M-35 46 L0 12 L35 46 Z" fill="#0794AE" stroke="#0794AE" stroke-width="4" stroke-linejoin="round"/>
+<rect x="-24" y="46" width="48" height="48" rx="3" fill="#0F2680"/>
+<rect x="-42" y="83" width="16" height="4" rx="2" fill="#0F2680"/>
+<rect x="26" y="83" width="16" height="4" rx="2" fill="#0F2680"/>
+<rect x="-42" y="86" width="4" height="8" fill="#0F2680"/>
+<rect x="38" y="86" width="4" height="8" fill="#0F2680"/>
+<rect x="-42" y="94" width="84" height="12" rx="4" fill="#0F2680"/>
+<path d="M-32 106 L32 106 L28 116 L-28 116 Z" fill="#0A1A60"/>
+<path d="M-28 116 L28 116 L46 372 L-46 372 Z" fill="url(#a1-bs)"/>
+<path d="M-33.62 196 L33.62 196 L34.75 212 L-34.75 212 Z" fill="#0794AE"/>
+<path d="M-43.05 330 L43.05 330 L43.61 338 L-43.61 338 Z" fill="#0B1020" fill-opacity="0.16"/>
+<rect x="-58" y="372" width="116" height="18" rx="5" fill="#0F2680"/>
+<rect x="-70" y="388" width="140" height="16" rx="6" fill="#0F2680"/>
+</g>
+<rect x="-6" y="256" width="12" height="36" rx="6" fill="#0B1020" fill-opacity="0.85"/>
+<rect x="-18" y="51" width="36" height="38" rx="2" fill="#0B1020"/>
+<rect x="-18" y="51" width="36" height="38" rx="2" fill="url(#a1-pane)"/>
+</g>
+<g transform="translate(128 52) scale(1)"><circle cx="0" cy="70" r="46" fill="url(#a1-glow)"/><circle cx="0" cy="70" r="11" fill="#fff"/></g>
+</svg>

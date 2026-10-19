@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Añadido
+
+- Logotipo e icono de NormaWatch (`assets/logo`) e imágenes de ejemplo con datos reales (`assets/muestras`).
+
 ## [1.1.0] - 2026-10-20
 
 ### Añadido

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<title>NormaWatch</title>
+<defs>
+<clipPath id="a3s-half"><rect x="22" y="0" width="64" height="64"/></clipPath><linearGradient id="a3s-bg" gradientUnits="userSpaceOnUse" x1="6" y1="2" x2="58" y2="62"><stop offset="0" stop-color="#141D36"/><stop offset="1" stop-color="#1636B5"/></linearGradient><linearGradient id="a3s-beam" gradientUnits="userSpaceOnUse" x1="22" y1="24.5" x2="58" y2="24.5"><stop offset="0" stop-color="#7FE9FF" stop-opacity="0.55"/><stop offset="1" stop-color="#7FE9FF" stop-opacity="0.0"/></linearGradient>
+</defs>
+<rect x="2" y="2" width="60" height="60" rx="14" fill="url(#a3s-bg)"/>
+<g transform="translate(0 1) scale(1)"><path d="M22 24.5 L56.93 15.79 L56.93 33.21 Z" fill="url(#a3s-beam)"/>
+<rect x="40" y="19" width="16" height="11" rx="5.5" fill="#00E58C"/>
+</g>
+<g transform="translate(2 0.5) scale(0.94)"><g>
+<path d="M22 5 L32 17 H12 Z" fill="#8FEBFF" stroke="#8FEBFF" stroke-width="2" stroke-linejoin="round"/><rect x="15" y="16" width="14" height="12" fill="#F4F8FF"/><rect x="11" y="28" width="22" height="5" rx="2" fill="#F4F8FF"/><path d="M17 33 H27 L30 54 H14 Z" fill="#F4F8FF"/><rect x="7" y="54" width="30" height="5" rx="2" fill="#F4F8FF"/>
+<g clip-path="url(#a3s-half)"><path d="M22 5 L32 17 H12 Z" fill="#38C9E6" stroke="#38C9E6" stroke-width="2" stroke-linejoin="round"/><rect x="15" y="16" width="14" height="12" fill="#A8C4F0"/><rect x="11" y="28" width="22" height="5" rx="2" fill="#A8C4F0"/><path d="M17 33 H27 L30 54 H14 Z" fill="#A8C4F0"/><rect x="7" y="54" width="30" height="5" rx="2" fill="#A8C4F0"/></g>
+<rect x="17" y="19" width="10" height="7" rx="1" fill="#0B1020"/>
+<circle cx="22" cy="22.5" r="3.4" fill="#fff"/>
+</g></g>
+</svg>
