@@ -6,11 +6,11 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.1.0-1636B5?style=flat" alt="Versión 1.1.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-0B1020?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.1.0-1636B5?style=flat" alt="Versión 1.1.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
-<p align="center"><img src="assets/muestras/portada.png" alt="Representación de la vista Resumen de NormaWatch con datos reales del BOE" width="100%"></p>
+<p align="center"><img src="assets/muestras/portada.png" alt="Vista de ejemplo de NormaWatch con cuatro filas de datos reales del BOE (fecha, tipo de norma y título)" width="100%"></p>
 
 **NormaWatch** es un **Actor de Apify** (así llama Apify a los programas que se ejecutan en su plataforma) que lista las nuevas **disposiciones generales** (sección I) del Boletín Oficial del Estado (BOE), solo con metadatos y enlaces, para que puedas vigilar la normativa nueva sin leer el sumario cada día. Está pensado para quien sigue la normativa española: asesorías, despachos, equipos de cumplimiento normativo y periodistas. Es **gratuito**: no tiene precio ni suscripción.
 
