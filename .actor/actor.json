@@ -3,7 +3,7 @@
   "name": "normawatch-boe",
   "title": "NormaWatch",
   "description": "Monitor de datos del BOE: nuevas disposiciones generales (sección I) en JSON, solo metadatos y enlaces.",
-  "version": "0.1",
+  "version": "1.0",
   "minMemoryMbytes": 256,
   "maxMemoryMbytes": 256,
   "defaultRunOptions": {

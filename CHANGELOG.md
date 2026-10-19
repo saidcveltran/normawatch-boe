@@ -6,6 +6,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.0.0] (candidata, sin publicar)
+
 ### Añadido
 
 - Lectura del sumario diario del BOE (API de datos abiertos) para un intervalo en el que la fecha final es como máximo 31 días posterior a la inicial, limitada a la sección I (disposiciones generales).
