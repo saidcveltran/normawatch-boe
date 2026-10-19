@@ -3,8 +3,11 @@
 import { BoeError, errName } from "./errors.ts";
 import { dropMessages, parseSumario } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
+import { madridToday, matchesFilters, parseInput, validDate } from "./input.ts";
+import type { RunInput } from "./input.ts";
 
-export { BoeError, errName };
+export { BoeError, errName, madridToday, parseInput };
+export type { RunInput };
 
 export const BASE_URL = "https://www.boe.es/datosabiertos/api/boe/sumario/";
 export const USER_AGENT = "normawatch-boe/0.1 (+https://aiskaron.com/en/tools/normawatch-boe/)";
@@ -13,73 +16,10 @@ const TIMEOUT_MS = 30_000;
 export const MAX_BYTES = 4 * 1024 * 1024;
 const BACKOFF_MS = [2000, 4000, 8000];
 const MAX_RETRY_AFTER_MS = 60_000;
-const MAX_RANGE_DAYS = 31;
-
-export type RunInput = { dates: string[]; maxItems: number; requestDelayMs: number };
-
-// ---------- fechas y entrada ----------
-
-function validDate(value: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!m) return false;
-  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
-  return d.toISOString().slice(0, 10) === value;
-}
-
-function dayNumber(value: string): number {
-  return Math.round(Date.parse(`${value}T00:00:00Z`) / 86_400_000);
-}
-
-function addDays(value: string, days: number): string {
-  return new Date(Date.parse(`${value}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
-}
-
-export function madridToday(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Madrid",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-}
 
 export function buildSumarioUrl(isoDate: string): string {
   if (typeof isoDate !== "string" || !validDate(isoDate)) throw new BoeError("fecha no válida");
   return BASE_URL + isoDate.replaceAll("-", "");
-}
-
-function intField(input: Record<string, unknown>, name: string, def: number, min: number, max: number): number {
-  const v = input[name];
-  if (v === undefined || v === null) return def;
-  if (typeof v !== "number" || !Number.isInteger(v) || v < min || v > max) {
-    throw new BoeError(`${name} debe ser un entero entre ${min} y ${max}`);
-  }
-  return v;
-}
-
-function dateField(input: Record<string, unknown>, name: string): string | undefined {
-  const v = input[name];
-  if (v === undefined || v === null || v === "") return undefined;
-  if (typeof v !== "string" || !validDate(v)) throw new BoeError(`${name} debe ser una fecha con formato AAAA-MM-DD`);
-  return v;
-}
-
-export function parseInput(input: Record<string, unknown>, today: string): RunInput {
-  const from = dateField(input, "dateFrom") ?? today;
-  const to = dateField(input, "dateTo") ?? from;
-  if (dayNumber(from) > dayNumber(today)) throw new BoeError("dateFrom no puede ser posterior a hoy (fecha futura)");
-  if (dayNumber(to) > dayNumber(today)) throw new BoeError("dateTo no puede ser posterior a hoy (fecha futura)");
-  if (dayNumber(to) < dayNumber(from)) throw new BoeError("dateTo no puede ser anterior a dateFrom");
-  if (dayNumber(to) - dayNumber(from) > MAX_RANGE_DAYS) {
-    throw new BoeError(`dateTo debe ser como máximo ${MAX_RANGE_DAYS} días posterior a dateFrom`);
-  }
-  const dates: string[] = [];
-  for (let d = from; dayNumber(d) <= dayNumber(to); d = addDays(d, 1)) dates.push(d);
-  return {
-    dates,
-    maxItems: intField(input, "maxItems", 500, 1, 10_000),
-    requestDelayMs: intField(input, "requestDelayMs", 1000, 500, 10_000),
-  };
 }
 
 // ---------- cliente ----------
@@ -218,7 +158,9 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
         deps.log.info("Sin BOE este día", { date });
         continue;
       }
-      const { items, dropped } = parseSumario(result.body, date, deps.now());
+      const parsed = parseSumario(result.body, date, deps.now());
+      const { dropped } = parsed;
+      const items = parsed.items.filter((it) => matchesFilters(it, input));
       const room = items.slice(0, input.maxItems - summary.stored);
       if (room.length > 0) await deps.push(room);
       summary.stored += room.length;

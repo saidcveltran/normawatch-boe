@@ -21,14 +21,14 @@
     "departments": {
       "title": "Departamentos",
       "type": "array",
-      "description": "Conserva solo los elementos cuyo departamento contiene alguno de estos textos (sin distinguir mayúsculas, texto literal). Máximo 50 entradas.",
+      "description": "Conserva solo los elementos cuyo departamento contiene alguno de estos textos (sin distinguir mayúsculas, texto literal). Máximo 50 entradas de 200 caracteres cada una.",
       "editor": "stringList",
       "maxItems": 50
     },
     "keywords": {
       "title": "Palabras clave",
       "type": "array",
-      "description": "Conserva solo los elementos cuyo título contiene alguno de estos textos (sin distinguir mayúsculas, texto literal). Máximo 50 entradas.",
+      "description": "Conserva solo los elementos cuyo título contiene alguno de estos textos (sin distinguir mayúsculas, texto literal). Máximo 50 entradas de 200 caracteres cada una.",
       "editor": "stringList",
       "maxItems": 50
     },

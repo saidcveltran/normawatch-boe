@@ -8,9 +8,18 @@ export const SOURCE_URL = "https://www.boe.es";
 const MAX_TEXT = 2000;
 const BOE_HOST = "www.boe.es";
 
-// Tratamientos personales ("don", "doña", "D.", "Dña.") seguidos de espacio. No se usa \b porque
-// no reconoce bien las letras acentuadas ni la ñ.
-const NAME_GUARD = /(?<![\p{L}])(?:don|doña|D\.|Dña\.)(?=\s)/iu;
+// Tratamientos personales ("don", "doña", "D.", "D.ª", "Dª", "Dña" con o sin punto) seguidos de espacio.
+// No se usa \b porque no reconoce bien las letras acentuadas ni la ñ. La mirada atrás excluye letras y
+// puntos, de modo que abreviaturas como "R.D. 123/2026" no se confunden con un tratamiento; los casos
+// ambiguos se descartan igualmente, porque ante la duda prima la protección de datos personales.
+const NAME_GUARD = /(?<![\p{L}.])(?:don|doña|d\.ª|dª|dña\.?|d\.)(?=\s)/iu;
+const ZERO_WIDTH = /[​-‍⁠﻿]/g;
+
+// Texto que se somete al filtro: normalizado a NFC y sin caracteres de ancho cero. Solo sirve para la
+// comprobación; el título que se guarda no se modifica.
+function guardText(v: string): string {
+  return v.normalize("NFC").replace(ZERO_WIDTH, "");
+}
 
 export type OutputItem = {
   id: string;
@@ -27,8 +36,8 @@ export type OutputItem = {
   sourceUrl: string;
 };
 
-// Recuentos de lo descartado: identificador no válido, enlace que no es del BOE y filtro de nombres.
-export type Dropped = { badId: number; badUrl: number; nameGuard: number };
+// Recuentos de lo descartado: identificador no válido, enlace no válido, filtro de nombres y texto demasiado largo.
+export type Dropped = { badId: number; badUrl: number; nameGuard: number; tooLong: number };
 
 type Obj = Record<string, unknown>;
 
@@ -40,13 +49,14 @@ function many(v: unknown): Obj[] {
   return isObj(v) ? [v] : [];
 }
 
+// Los textos no se truncan, porque alteraría los metadatos del BOE: uno demasiado largo descarta el elemento.
 function text(v: unknown): string {
-  return typeof v === "string" ? v.slice(0, MAX_TEXT) : "";
+  return typeof v === "string" ? v : "";
 }
 
 // Devuelve el enlace normalizado si es https del BOE; null si no lo es.
 function boeUrl(v: unknown): string | null {
-  if (typeof v !== "string") return null;
+  if (typeof v !== "string" || v.length > MAX_TEXT) return null;
   let u: URL;
   try {
     u = new URL(v);
@@ -59,7 +69,7 @@ function boeUrl(v: unknown): string | null {
   return u.href;
 }
 
-// Un enlace ausente no cuenta como descartado; uno presente pero ajeno al BOE sí.
+// Un enlace ausente no cuenta como descartado; uno presente pero ajeno al BOE o con forma inesperada sí.
 function checkedUrl(v: unknown, dropped: Dropped): string | undefined {
   if (v === undefined || v === null) return undefined;
   const url = boeUrl(v);
@@ -87,6 +97,13 @@ export function dropMessages(dropped: Dropped): string[] {
         : `descartados ${dropped.badUrl} enlaces que no son del BOE`,
     );
   }
+  if (dropped.tooLong > 0) {
+    out.push(
+      dropped.tooLong === 1
+        ? "descartado 1 elemento con texto demasiado largo"
+        : `descartados ${dropped.tooLong} elementos con texto demasiado largo`,
+    );
+  }
   if (dropped.nameGuard > 0) {
     out.push(
       dropped.nameGuard === 1
@@ -104,7 +121,7 @@ export function parseSumario(json: unknown, date: string, retrievedAt: string): 
   const diarios = json["data"]["sumario"]["diario"];
   if (!Array.isArray(diarios)) throw new BoeError("documento de sumario inesperado: falta diario");
   const items: OutputItem[] = [];
-  const dropped: Dropped = { badId: 0, badUrl: 0, nameGuard: 0 };
+  const dropped: Dropped = { badId: 0, badUrl: 0, nameGuard: 0, tooLong: 0 };
   for (const diario of many(diarios)) {
     for (const seccion of many(diario["seccion"])) {
       if (seccion["codigo"] !== "1") continue;
@@ -121,11 +138,20 @@ export function parseSumario(json: unknown, date: string, retrievedAt: string): 
               continue;
             }
             const rawTitle = entry["titulo"];
-            if (typeof rawTitle === "string" && NAME_GUARD.test(rawTitle)) {
+            if (typeof rawTitle === "string" && NAME_GUARD.test(guardText(rawTitle))) {
               dropped.nameGuard++;
               continue;
             }
-            const pdf = isObj(entry["url_pdf"]) ? entry["url_pdf"]["texto"] : undefined;
+            const department = text(dep["nombre"]);
+            const title = text(rawTitle);
+            if (department.length > MAX_TEXT || group.epigraph.length > MAX_TEXT || title.length > MAX_TEXT) {
+              dropped.tooLong++;
+              continue;
+            }
+            // url_pdf es un objeto con el enlace en "texto"; presente con otra forma cuenta como no válido.
+            const rawPdf = entry["url_pdf"];
+            if (rawPdf !== undefined && rawPdf !== null && !isObj(rawPdf)) dropped.badUrl++;
+            const pdf = isObj(rawPdf) ? rawPdf["texto"] : undefined;
             const urlHtml = checkedUrl(entry["url_html"], dropped);
             const urlPdf = checkedUrl(pdf, dropped);
             const urlXml = checkedUrl(entry["url_xml"], dropped);
@@ -133,9 +159,9 @@ export function parseSumario(json: unknown, date: string, retrievedAt: string): 
               id,
               date,
               section: "1",
-              department: text(dep["nombre"]),
+              department,
               epigraph: group.epigraph,
-              title: text(rawTitle),
+              title,
               ...(urlHtml !== undefined ? { urlHtml } : {}),
               ...(urlPdf !== undefined ? { urlPdf } : {}),
               ...(urlXml !== undefined ? { urlXml } : {}),
