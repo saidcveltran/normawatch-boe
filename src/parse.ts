@@ -13,12 +13,14 @@ const BOE_HOST = "www.boe.es";
 // puntos, de modo que abreviaturas como "R.D. 123/2026" no se confunden con un tratamiento; los casos
 // ambiguos se descartan igualmente, porque ante la duda prima la protección de datos personales.
 const NAME_GUARD = /(?<![\p{L}.])(?:don|doña|d\.ª|dª|dña\.?|d\.)(?=\s)/iu;
-const ZERO_WIDTH = /[​-‍⁠﻿]/g;
+// Caracteres de formato invisibles (categoría Cf): guion blando U+00AD, marcas de dirección, controles
+// bidireccionales, ancho cero, U+2060-2064 y la marca de orden de bytes.
+const INVISIBLE = /\p{Cf}/gu;
 
-// Texto que se somete al filtro: normalizado a NFC y sin caracteres de ancho cero. Solo sirve para la
+// Texto que se somete al filtro: normalizado a NFC y sin caracteres invisibles. Solo sirve para la
 // comprobación; el título que se guarda no se modifica.
 function guardText(v: string): string {
-  return v.normalize("NFC").replace(ZERO_WIDTH, "");
+  return v.normalize("NFC").replace(INVISIBLE, "");
 }
 
 export type OutputItem = {

@@ -35,7 +35,7 @@
     "onlyNew": {
       "title": "Solo elementos nuevos",
       "type": "boolean",
-      "description": "Omite los elementos ya devueltos en ejecuciones anteriores (útil en ejecuciones programadas).",
+      "description": "Si está activado, omite los elementos que ya se entregaron en ejecuciones anteriores de tu cuenta, recordados por su identificador en el almacén clave-valor con nombre SEEN, con una memoria por cada combinación de departamentos y palabras clave (hasta 50 000 identificadores en cada una; al superarlos se olvidan los más antiguos). Solo se recuerdan los elementos realmente entregados: los que quedan fuera por los filtros o por el máximo de elementos se podrán entregar en una ejecución posterior. Si está desactivado, no se lee ni se escribe SEEN. En cualquier caso, un mismo identificador se entrega una sola vez por ejecución.",
       "default": false
     },
     "maxItems": {

@@ -6,6 +6,9 @@
   "version": "0.1",
   "minMemoryMbytes": 256,
   "maxMemoryMbytes": 256,
+  "defaultRunOptions": {
+    "timeoutSecs": 3600
+  },
   "input": "./input_schema.json",
   "dockerfile": "../Dockerfile"
 }

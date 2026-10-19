@@ -1,128 +1,19 @@
-// Cliente de datos abiertos del BOE y bucle de ejecución. Solo biblioteca estándar (fetch, Intl, JSON).
-// La única URL que se solicita es BASE_URL más una fecha que ha pasado una validación estricta.
+// Bucle de ejecución del Actor. Solo biblioteca estándar. El cliente HTTP está en http.ts y se
+// reexporta aquí para que el resto del código tenga un único punto de entrada.
 import { BoeError, errName } from "./errors.ts";
+import { BASE_URL, MAX_BYTES, RateLimitError, TIMEOUT_MS, USER_AGENT, buildSumarioUrl, fetchSumario } from "./http.ts";
+
+// Días seguidos acabados en 429/5xx tras los que se detiene la ejecución.
+const MAX_RATE_LIMITED_DAYS = 2;
+import type { FetchOptions, FetchResult } from "./http.ts";
 import { dropMessages, parseSumario } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
-import { madridToday, matchesFilters, parseInput, validDate } from "./input.ts";
+import { madridToday, matchesFilters, parseInput } from "./input.ts";
 import type { RunInput } from "./input.ts";
 
 export { BoeError, errName, madridToday, parseInput };
-export type { RunInput };
-
-export const BASE_URL = "https://www.boe.es/datosabiertos/api/boe/sumario/";
-export const USER_AGENT = "normawatch-boe/0.1 (+https://aiskaron.com/en/tools/normawatch-boe/)";
-
-const TIMEOUT_MS = 30_000;
-export const MAX_BYTES = 4 * 1024 * 1024;
-const BACKOFF_MS = [2000, 4000, 8000];
-const MAX_RETRY_AFTER_MS = 60_000;
-
-export function buildSumarioUrl(isoDate: string): string {
-  if (typeof isoDate !== "string" || !validDate(isoDate)) throw new BoeError("fecha no válida");
-  return BASE_URL + isoDate.replaceAll("-", "");
-}
-
-// ---------- cliente ----------
-
-export type FetchOptions = {
-  fetchFn?: typeof fetch;
-  sleep?: (ms: number) => Promise<void>;
-  maxBytes?: number;
-  timeoutMs?: number;
-};
-
-export type FetchResult = { status: "ok"; body: unknown; requests: number } | { status: "empty"; requests: number };
-
-const defaultSleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-function retryDelay(res: Response, attempt: number): number {
-  const header = res.headers.get("retry-after");
-  const step = BACKOFF_MS[attempt] ?? BACKOFF_MS[BACKOFF_MS.length - 1]!;
-  if (header !== null && /^\d{1,5}$/.test(header.trim())) {
-    return Math.min(Math.max(Number(header.trim()) * 1000, step), MAX_RETRY_AFTER_MS);
-  }
-  return step;
-}
-
-async function readCapped(res: Response, maxBytes: number): Promise<string> {
-  const declared = Number(res.headers.get("content-length") ?? "0");
-  if (declared > maxBytes) throw new BoeError("respuesta demasiado grande");
-  if (!res.body) return "";
-  const reader = res.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  for (;;) {
-    let chunk: Awaited<ReturnType<typeof reader.read>>;
-    try {
-      chunk = await reader.read();
-    } catch (err) {
-      throw new BoeError(`falló la lectura de la respuesta (${errName(err)})`, { cause: errName(err) });
-    }
-    if (chunk.done) break;
-    const value = chunk.value;
-    total += value.byteLength;
-    if (total > maxBytes) {
-      await reader.cancel();
-      throw new BoeError("respuesta demasiado grande");
-    }
-    chunks.push(value);
-  }
-  return new TextDecoder("utf-8").decode(Buffer.concat(chunks));
-}
-
-export async function fetchSumario(isoDate: string, options: FetchOptions = {}): Promise<FetchResult> {
-  const url = buildSumarioUrl(isoDate);
-  const doFetch = options.fetchFn ?? fetch;
-  const sleep = options.sleep ?? defaultSleep;
-  const maxBytes = options.maxBytes ?? MAX_BYTES;
-  let requests = 0;
-  for (let attempt = 0; ; attempt++) {
-    requests++;
-    let res: Response;
-    try {
-      res = await doFetch(url, {
-        method: "GET",
-        headers: { Accept: "application/json", "User-Agent": USER_AGENT },
-        redirect: "error",
-        signal: AbortSignal.timeout(options.timeoutMs ?? TIMEOUT_MS),
-      });
-    } catch (err) {
-      throw new BoeError(`falló la petición del ${isoDate} (${errName(err)})`, { cause: errName(err) });
-    }
-    if (res.status === 404) {
-      await res.body?.cancel();
-      return { status: "empty", requests };
-    }
-    if (res.status === 429 || res.status >= 500) {
-      await res.body?.cancel();
-      if (attempt >= BACKOFF_MS.length) throw new BoeError(`el BOE respondió ${res.status} para el ${isoDate} tras los reintentos`);
-      await sleep(retryDelay(res, attempt));
-      continue;
-    }
-    if (res.status !== 200) {
-      await res.body?.cancel();
-      throw new BoeError(`el BOE respondió ${res.status} para el ${isoDate}`);
-    }
-    if (!(res.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) {
-      await res.body?.cancel();
-      throw new BoeError(`tipo de contenido inesperado para el ${isoDate}`);
-    }
-    let body: string;
-    try {
-      body = await readCapped(res, maxBytes);
-    } catch (err) {
-      if (err instanceof BoeError) throw new BoeError(`${err.message} (${isoDate})`, err.cause === undefined ? undefined : { cause: String(err.cause) });
-      throw new BoeError(`falló la lectura de la respuesta del ${isoDate} (${errName(err)})`, { cause: errName(err) });
-    }
-    try {
-      return { status: "ok", body: JSON.parse(body) as unknown, requests };
-    } catch {
-      throw new BoeError(`JSON no válido para el ${isoDate}`);
-    }
-  }
-}
-
-// ---------- bucle de ejecución ----------
+export { BASE_URL, MAX_BYTES, TIMEOUT_MS, USER_AGENT, buildSumarioUrl, fetchSumario };
+export type { RunInput, FetchOptions, FetchResult };
 
 export type RunDeps = {
   fetchDay: (date: string) => Promise<FetchResult>;
@@ -132,6 +23,11 @@ export type RunDeps = {
   log: {
     info: (message: string, data?: Record<string, unknown>) => void;
     error: (message: string, data?: Record<string, unknown>) => void;
+  };
+  // Memoria de elementos ya entregados; solo se consulta y se actualiza si la entrada trae onlyNew.
+  seen?: {
+    has: (id: string) => boolean;
+    add: (ids: string[]) => Promise<void>;
   };
 };
 
@@ -148,6 +44,10 @@ export type RunSummary = {
 // estados, nunca texto de títulos.
 export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummary> {
   const summary: RunSummary = { exitCode: 0, requests: 0, stored: 0, failedDays: 0, failedDates: [] };
+  const seen = input.onlyNew === true ? deps.seen : undefined;
+  // Identificadores entregados en esta ejecución: un mismo identificador se entrega una sola vez.
+  const delivered = new Set<string>();
+  let rateLimitedStreak = 0;
   for (let i = 0; i < input.dates.length && summary.stored < input.maxItems; i++) {
     const date = input.dates[i]!;
     if (i > 0) await deps.sleep(input.requestDelayMs);
@@ -155,22 +55,64 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
       const result = await deps.fetchDay(date);
       summary.requests += result.requests;
       if (result.status === "empty") {
+        rateLimitedStreak = 0;
         deps.log.info("Sin BOE este día", { date });
         continue;
       }
       const parsed = parseSumario(result.body, date, deps.now());
       const { dropped } = parsed;
-      const items = parsed.items.filter((it) => matchesFilters(it, input));
-      const room = items.slice(0, input.maxItems - summary.stored);
-      if (room.length > 0) await deps.push(room);
+      const matching = parsed.items.filter((it) => matchesFilters(it, input));
+      const candidates: OutputItem[] = [];
+      const inDay = new Set<string>();
+      for (const it of matching) {
+        if (delivered.has(it.id) || inDay.has(it.id) || seen?.has(it.id) === true) continue;
+        inDay.add(it.id);
+        candidates.push(it);
+      }
+      const room = candidates.slice(0, input.maxItems - summary.stored);
+      if (room.length > 0) {
+        await deps.push(room);
+        for (const it of room) delivered.add(it.id);
+        // Solo se marcan como vistos los elementos realmente entregados.
+        // Si no se puede guardar, lo ya entregado se conserva y se cuenta; la ejecución acaba con error.
+        if (seen) {
+          try {
+            await seen.add(room.map((it) => it.id));
+          } catch (seenErr) {
+            summary.stored += room.length;
+            deps.log.error("No se pudo guardar SEEN: lo ya entregado se conserva, pero podría repetirse en la próxima ejecución", {
+              date,
+              name: errName(seenErr),
+              delivered: room.length,
+            });
+            summary.exitCode = 1;
+            return summary;
+          }
+        }
+      }
+      rateLimitedStreak = 0;
       summary.stored += room.length;
       for (const message of dropMessages(dropped)) deps.log.info(message, { date });
-      deps.log.info("Día completado", { date, found: items.length, stored: room.length, ...dropped });
+      deps.log.info("Día completado", {
+        date,
+        found: matching.length,
+        repeated: matching.length - candidates.length,
+        stored: room.length,
+        ...dropped,
+      });
     } catch (err) {
       if (err instanceof BoeError) {
         summary.failedDays++;
         summary.failedDates.push(date);
         deps.log.error("Día fallido", { date, reason: err.message });
+        rateLimitedStreak = err instanceof RateLimitError ? rateLimitedStreak + 1 : 0;
+        if (rateLimitedStreak >= MAX_RATE_LIMITED_DAYS) {
+          deps.log.error("Se detiene la ejecución: el BOE responde con límite de peticiones o error del servidor en días seguidos", {
+            days: rateLimitedStreak,
+          });
+          summary.exitCode = 1;
+          return summary;
+        }
       } else {
         deps.log.error("Error inesperado", { date, name: errName(err) });
         summary.exitCode = 1;
@@ -178,6 +120,7 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
       }
     }
   }
+  if (summary.stored >= input.maxItems) deps.log.info("Alcanzado maxItems", { maxItems: input.maxItems });
   deps.log.info("Ejecución terminada", {
     days: input.dates.length,
     requests: summary.requests,

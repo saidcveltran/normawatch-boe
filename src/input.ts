@@ -15,6 +15,8 @@ export type RunInput = {
   dates: string[];
   maxItems: number;
   requestDelayMs: number;
+  // Solo aparece cuando vale verdadero.
+  onlyNew?: true;
   // Textos en minúsculas; solo aparecen cuando hay algún filtro.
   departments?: string[];
   keywords?: string[];
@@ -25,6 +27,7 @@ export type NormalizedInput = {
   dateTo: string;
   maxItems: number;
   requestDelayMs: number;
+  onlyNew: boolean;
   departments: string[];
   keywords: string[];
 };
@@ -70,6 +73,13 @@ function intField(input: Record<string, unknown>, name: string, def: number, min
   return v;
 }
 
+function boolField(input: Record<string, unknown>, name: string): boolean {
+  const v = input[name];
+  if (v === undefined || v === null) return false;
+  if (typeof v !== "boolean") throw new BoeError(`${name} debe ser verdadero o falso`);
+  return v;
+}
+
 function dateField(input: Record<string, unknown>, name: string): string | undefined {
   const v = input[name];
   if (v === undefined || v === null || v === "") return undefined;
@@ -78,7 +88,7 @@ function dateField(input: Record<string, unknown>, name: string): string | undef
 }
 
 // Lista de textos literales: máximo de entradas y de longitud; las entradas en blanco se ignoran
-// y el resto se pasa a minúsculas.
+// y el resto se normaliza a NFC y se pasa a minúsculas.
 function listField(input: Record<string, unknown>, name: string): string[] {
   const v = input[name];
   if (v === undefined || v === null) return [];
@@ -91,7 +101,7 @@ function listField(input: Record<string, unknown>, name: string): string[] {
       throw new BoeError(`cada entrada de ${name} debe tener como máximo ${MAX_ENTRY_CHARS} caracteres`);
     }
     const t = entry.trim();
-    if (t !== "") out.push(t.toLowerCase());
+    if (t !== "") out.push(t.normalize("NFC").toLowerCase());
   }
   return out;
 }
@@ -111,6 +121,7 @@ export function normalizeInput(input: Record<string, unknown>, today: string): N
     dateTo,
     maxItems: intField(input, "maxItems", DEFAULT_MAX_ITEMS, 1, MAX_ITEMS_LIMIT),
     requestDelayMs: intField(input, "requestDelayMs", DEFAULT_DELAY_MS, MIN_DELAY_MS, MAX_DELAY_MS),
+    onlyNew: boolField(input, "onlyNew"),
     departments: listField(input, "departments"),
     keywords: listField(input, "keywords"),
   };
@@ -124,6 +135,7 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
     dates,
     maxItems: n.maxItems,
     requestDelayMs: n.requestDelayMs,
+    ...(n.onlyNew ? { onlyNew: true as const } : {}),
     ...(n.departments.length > 0 ? { departments: n.departments } : {}),
     ...(n.keywords.length > 0 ? { keywords: n.keywords } : {}),
   };
@@ -131,16 +143,16 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
 
 // ---------- filtros ----------
 
-// Coincidencia por subcadena en minúsculas, nunca como expresión regular: una palabra clave
+// Coincidencia por subcadena en minúsculas y NFC, nunca como expresión regular: una palabra clave
 // con forma de patrón se trata como texto literal. Dentro de cada lista basta una coincidencia;
 // entre listas deben cumplirse las dos.
 export function matchesFilters(item: { department: string; title: string }, filters: Filters): boolean {
   if (filters.departments !== undefined && filters.departments.length > 0) {
-    const dep = item.department.toLowerCase();
+    const dep = item.department.normalize("NFC").toLowerCase();
     if (!filters.departments.some((d) => dep.includes(d))) return false;
   }
   if (filters.keywords !== undefined && filters.keywords.length > 0) {
-    const title = item.title.toLowerCase();
+    const title = item.title.normalize("NFC").toLowerCase();
     if (!filters.keywords.some((k) => title.includes(k))) return false;
   }
   return true;
