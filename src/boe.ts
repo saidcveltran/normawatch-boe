@@ -10,6 +10,7 @@ import { dropMessages, parseSumario } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
 import { madridToday, matchesFilters, parseInput } from "./input.ts";
 import type { RunInput } from "./input.ts";
+import type { Notifier } from "./notify.ts";
 
 export { BoeError, errName, madridToday, parseInput };
 export { BASE_URL, MAX_BYTES, TIMEOUT_MS, USER_AGENT, buildSumarioUrl, fetchSumario };
@@ -29,6 +30,10 @@ export type RunDeps = {
     has: (id: string) => boolean;
     add: (ids: string[]) => Promise<void>;
   };
+  // Aviso opcional (correo, Telegram, Slack). Con avisador, SEEN se confirma al final y solo si el aviso salió bien.
+  notifier?: Notifier;
+  // Muestra el resultado de los avisos como mensaje de estado de la ejecución.
+  setStatus?: (message: string) => Promise<void>;
 };
 
 export type RunSummary = {
@@ -47,6 +52,10 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
   const seen = input.onlyNew === true ? deps.seen : undefined;
   // Identificadores entregados en esta ejecución: un mismo identificador se entrega una sola vez.
   const delivered = new Set<string>();
+  // Con avisador, los elementos entregados y los identificadores pendientes de marcar como vistos.
+  const notifier = deps.notifier;
+  const deliveredItems: OutputItem[] = [];
+  const pendingIds: string[] = [];
   let rateLimitedStreak = 0;
   for (let i = 0; i < input.dates.length && summary.stored < input.maxItems; i++) {
     const date = input.dates[i]!;
@@ -73,9 +82,13 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
       if (room.length > 0) {
         await deps.push(room);
         for (const it of room) delivered.add(it.id);
+        if (notifier) {
+          deliveredItems.push(...room);
+          for (const it of room) pendingIds.push(it.id);
+        }
         // Solo se marcan como vistos los elementos realmente entregados.
         // Si no se puede guardar, lo ya entregado se conserva y se cuenta; la ejecución acaba con error.
-        if (seen) {
+        if (seen && !notifier) {
           try {
             await seen.add(room.map((it) => it.id));
           } catch (seenErr) {
@@ -128,5 +141,53 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
     failedDays: summary.failedDays,
   });
   if (summary.failedDays > 0 && summary.failedDays === input.dates.length) summary.exitCode = 1;
+  if (notifier && summary.exitCode === 0) await finishWithNotice(notifier, deliveredItems, pendingIds, seen, summary, deps);
   return summary;
+}
+
+// Aviso final. SEEN se confirma solo si todos los canales funcionaron; si no, los elementos se repetirán en la
+// próxima ejecución (el conjunto de datos de esta ya los tiene) y la ejecución termina con código 3.
+// Los errores se registran solo por su nombre: nunca su mensaje, que podría arrastrar un secreto.
+async function finishWithNotice(
+  notifier: Notifier,
+  items: OutputItem[],
+  pendingIds: string[],
+  seen: RunDeps["seen"],
+  summary: RunSummary,
+  deps: RunDeps,
+): Promise<void> {
+  if (items.length === 0 && !notifier.whenEmpty) {
+    deps.log.info("Sin elementos nuevos: no se envía el aviso", {});
+    return;
+  }
+  let ok = false;
+  let statusMessage = "Aviso no enviado";
+  try {
+    const report = await notifier.send(items);
+    ok = report.ok;
+    statusMessage = report.statusMessage;
+  } catch (err) {
+    deps.log.error("El aviso falló con un error inesperado", { name: errName(err) });
+  }
+  try {
+    await deps.setStatus?.(statusMessage);
+  } catch (err) {
+    deps.log.error("No se pudo actualizar el mensaje de estado", { name: errName(err) });
+  }
+  if (!ok) {
+    deps.log.error("El aviso no se envió: los elementos se repetirán en la próxima ejecución", { delivered: items.length });
+    summary.exitCode = 3;
+    return;
+  }
+  if (seen && pendingIds.length > 0) {
+    try {
+      await seen.add(pendingIds);
+    } catch (seenErr) {
+      deps.log.error("No se pudo guardar SEEN: lo ya entregado se conserva, pero podría repetirse en la próxima ejecución", {
+        name: errName(seenErr),
+        delivered: pendingIds.length,
+      });
+      summary.exitCode = 1;
+    }
+  }
 }

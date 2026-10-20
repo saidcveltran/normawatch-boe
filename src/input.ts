@@ -2,6 +2,8 @@
 // Cada campo se comprueba antes de hacer ninguna petición; una entrada incorrecta falla con un mensaje claro.
 import { BoeError } from "./errors.ts";
 import { isNormType, normTypeOf } from "./classify.ts";
+import { validEmail, validSlackWebhookUrl, validTelegramChatId, validTelegramToken } from "./notify.ts";
+import type { Channels } from "./notify.ts";
 
 export const MAX_RANGE_DAYS = 31;
 export const DEFAULT_MAX_ITEMS = 500;
@@ -185,4 +187,44 @@ export function matchesFilters(
     if (!filters.normTypes.includes(type)) return false;
   }
   return true;
+}
+
+// ---------- avisos ----------
+
+export type NotifyInput = { channels: Channels; whenEmpty: boolean };
+
+// Texto opcional de un canal: vacío o ausente significa que el canal no se usa. Los mensajes de error
+// nombran el campo y nunca repiten su valor, porque puede ser un secreto.
+function channelText(input: Record<string, unknown>, name: string): string | undefined {
+  const v = input[name];
+  if (v === undefined || v === null) return undefined;
+  if (typeof v !== "string") throw new BoeError(`${name} debe ser un texto`);
+  const t = v.trim();
+  return t === "" ? undefined : t;
+}
+
+// Valida los campos de aviso antes de hacer ninguna petición. Un canal solo se activa con todos sus campos;
+// si falta alguno o tiene un formato incorrecto, la entrada es no válida (código de salida 2).
+export function parseNotifyInput(input: Record<string, unknown>): NotifyInput {
+  const channels: Channels = {};
+  const email = channelText(input, "emailTo");
+  if (email !== undefined) {
+    if (!validEmail(email)) throw new BoeError("emailTo debe ser una única dirección de correo válida (sin comas, espacios ni saltos de línea)");
+    channels.email = email;
+  }
+  const token = channelText(input, "telegramBotToken");
+  const chatId = channelText(input, "telegramChatId");
+  if (token !== undefined || chatId !== undefined) {
+    if (token === undefined) throw new BoeError("telegramBotToken es obligatorio si se indica telegramChatId");
+    if (chatId === undefined) throw new BoeError("telegramChatId es obligatorio si se indica telegramBotToken");
+    if (!validTelegramToken(token)) throw new BoeError("telegramBotToken no tiene el formato de un token de bot de Telegram");
+    if (!validTelegramChatId(chatId)) throw new BoeError("telegramChatId debe ser un número (puede ser negativo) o un nombre de canal con @");
+    channels.telegram = { botToken: token, chatId };
+  }
+  const hook = channelText(input, "slackWebhookUrl");
+  if (hook !== undefined) {
+    if (!validSlackWebhookUrl(hook)) throw new BoeError("slackWebhookUrl no es un webhook entrante de Slack válido (https://hooks.slack.com/services/…)");
+    channels.slackWebhookUrl = hook;
+  }
+  return { channels, whenEmpty: boolField(input, "notifyWhenEmpty") };
 }

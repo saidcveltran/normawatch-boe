@@ -98,6 +98,39 @@
       "default": 1000,
       "minimum": 500,
       "maximum": 10000
+    },
+    "emailTo": {
+      "title": "Correo para el resumen diario",
+      "type": "string",
+      "description": "Dirección a la que se envía un resumen con lo entregado en la ejecución, mediante el Actor apify/send-mail de Apify. En el plan gratuito de Apify debe ser el correo de tu propia cuenta de Apify; con un plan de pago, Apify admite otras direcciones. Una sola dirección. Vacío significa que no se envía correo. Se guarda cifrado. El envío es una ejecución adicional que Apify factura a tu cuenta.",
+      "editor": "textfield",
+      "isSecret": true
+    },
+    "notifyWhenEmpty": {
+      "title": "Avisar también si no hay novedades",
+      "type": "boolean",
+      "description": "Si está desactivado (por defecto), solo se envía aviso cuando la ejecución entrega al menos un elemento. Si lo activas, se avisa también cuando no hay ninguno. Afecta al correo, a Telegram y a Slack.",
+      "default": false
+    },
+    "telegramBotToken": {
+      "title": "Token del bot de Telegram",
+      "type": "string",
+      "description": "Token del bot que enviará el resumen a Telegram, con la forma número:texto que entrega @BotFather. Se guarda cifrado. Hace falta también el identificador del chat. Vacío significa que no se avisa por Telegram.",
+      "editor": "textfield",
+      "isSecret": true
+    },
+    "telegramChatId": {
+      "title": "Identificador del chat de Telegram",
+      "type": "string",
+      "description": "Número del chat (negativo en grupos y canales) o nombre del canal con @ (por ejemplo @mi_canal). El bot debe poder escribir en ese chat. Si publicas en un canal público, el resumen será público.",
+      "editor": "textfield"
+    },
+    "slackWebhookUrl": {
+      "title": "Webhook entrante de Slack",
+      "type": "string",
+      "description": "Dirección del webhook entrante de Slack (empieza por https://hooks.slack.com/services/). Se guarda cifrada. Vacío significa que no se avisa por Slack. Si publicas en un canal público, el resumen será público.",
+      "editor": "textfield",
+      "isSecret": true
     }
   }
 }
