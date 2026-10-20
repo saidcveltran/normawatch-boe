@@ -27,7 +27,7 @@ export type NotifyPlan = { channels: Channels; whenEmpty: boolean };
 export type NotifyResult = { channel: ChannelName; ok: boolean; sent: number; code?: string };
 
 export type NotifyDeps = {
-  callActor: (actorId: string, input: Record<string, unknown>, options: { memory: number; timeout: number }) => Promise<{ status: string }>;
+  callActor: (actorId: string, input: Record<string, unknown>, options: { memory: number; timeout: number; log: null }) => Promise<{ status: string }>;
   fetch: typeof fetch;
   sleep: (ms: number) => Promise<void>;
   log: {
@@ -195,7 +195,8 @@ async function sendEmail(digest: Digest, to: string, deps: NotifyDeps): Promise<
     const run = await deps.callActor(
       SEND_MAIL_ACTOR,
       { to, subject: digest.subject, text: digest.text, html: digest.html },
-      { memory: SEND_MAIL_MEMORY_MB, timeout: SEND_MAIL_TIMEOUT_SECS },
+      // log: null evita que el SDK copie el registro de send-mail (con la dirección y el resumen) en el de NormaWatch.
+      { memory: SEND_MAIL_MEMORY_MB, timeout: SEND_MAIL_TIMEOUT_SECS, log: null },
     );
     if (run.status === "SUCCEEDED") return { channel: "email", ok: true, sent: 1 };
     return { channel: "email", ok: false, sent: 0, code: /^[A-Z_-]{1,20}$/.test(run.status) ? run.status : "desconocido" };

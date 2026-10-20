@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.2.1] - 2026-10-20
+
+### Corregido
+
+- El registro de la ejecución de `apify/send-mail` (con la dirección de correo y el resumen) ya no se copia en el registro de NormaWatch.
+
 ## [1.2.0] - 2026-10-20
 
 ### Añadido
