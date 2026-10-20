@@ -5,7 +5,11 @@ import { isNormType, normTypeOf } from "./classify.ts";
 import { validEmail, validSlackWebhookUrl, validTelegramChatId, validTelegramToken } from "./notify.ts";
 import type { Channels } from "./notify.ts";
 
-export const MAX_RANGE_DAYS = 31;
+export const MAX_RANGE_DAYS = 366;
+// Hasta este número de días de diferencia la ejecución se comporta como en 1.2 (orden ascendente y pausa elegida).
+// Por encima, el orden es del más reciente al más antiguo y la pausa efectiva no baja de LONG_RANGE_MIN_DELAY_MS.
+export const LONG_RANGE_DAYS = 31;
+export const LONG_RANGE_MIN_DELAY_MS = 1000;
 export const DEFAULT_MAX_ITEMS = 500;
 export const MAX_ITEMS_LIMIT = 10_000;
 export const DEFAULT_DELAY_MS = 1000;
@@ -153,10 +157,13 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
   const n = normalizeInput(input, today);
   const dates: string[] = [];
   for (let d = n.dateFrom; dayNumber(d) <= dayNumber(n.dateTo); d = addDays(d, 1)) dates.push(d);
+  const long = dayNumber(n.dateTo) - dayNumber(n.dateFrom) > LONG_RANGE_DAYS;
+  // Rango largo: primero lo más reciente (así maxItems conserva lo último) y pausa mínima de 1 s entre peticiones.
+  if (long) dates.reverse();
   return {
     dates,
     maxItems: n.maxItems,
-    requestDelayMs: n.requestDelayMs,
+    requestDelayMs: long ? Math.max(n.requestDelayMs, LONG_RANGE_MIN_DELAY_MS) : n.requestDelayMs,
     ...(n.onlyNew ? { onlyNew: true as const } : {}),
     ...(n.departments.length > 0 ? { departments: n.departments } : {}),
     ...(n.keywords.length > 0 ? { keywords: n.keywords } : {}),

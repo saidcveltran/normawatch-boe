@@ -14,7 +14,7 @@
     "dateTo": {
       "title": "Fecha hasta",
       "type": "string",
-      "description": "Última fecha del BOE que se lee, como máximo 31 días después de la fecha desde. Vacía significa la fecha desde.",
+      "description": "Última fecha del BOE que se lee, como máximo 366 días después de la fecha desde. Vacía significa la fecha desde. Con más de 31 días de diferencia se leen primero los días más recientes y la pausa entre peticiones es de al menos 1000 ms.",
       "editor": "datepicker",
       "dateType": "absolute"
     },

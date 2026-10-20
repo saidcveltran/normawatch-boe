@@ -5,7 +5,10 @@ import { createNotifier } from "./notify.ts";
 import type { NotifyDeps } from "./notify.ts";
 import { SEEN_STORE_NAME, SeenStore, seenKey } from "./seen.ts";
 
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+import type { OutputItem } from "./parse.ts";
+
+const STATE_KEY = "STATE";
+const sleep =(ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 await Actor.init();
 let exitCode = 0;
@@ -40,14 +43,38 @@ try {
     },
   };
   const datasetId = Actor.getEnv().defaultDatasetId;
+  // Con más de 31 días las fechas van de la más reciente a la más antigua: el rango se toma por mínimo y máximo.
+  const sortedDates = [...input.dates].sort();
   const notifier = hasChannels
     ? createNotifier(plan, noticeDeps, {
-        dateFrom: input.dates[0]!,
-        dateTo: input.dates[input.dates.length - 1]!,
+        dateFrom: sortedDates[0]!,
+        dateTo: sortedDates[sortedDates.length - 1]!,
         ...(datasetId ? { datasetUrl: `https://console.apify.com/storage/datasets/${datasetId}` } : {}),
       })
     : undefined;
+  // Punto de control en el almacén clave-valor de la ejecución (clave STATE): sobrevive a migraciones y reinicios.
+  // Se guarda tras cada día, así que ante una migración ya está al día y la ejecución continúa en el nuevo contenedor.
+  const runStore = await Actor.openKeyValueStore();
+  Actor.on("migrating", () => {
+    log.info("Migración en curso: el punto de control (STATE) ya está guardado y la ejecución se reanudará desde él");
+  });
   const summary = await runDays(input, {
+    checkpoint: {
+      load: () => runStore.getValue(STATE_KEY),
+      save: (state) => runStore.setValue(STATE_KEY, state),
+      clear: () => runStore.setValue(STATE_KEY, null),
+      loadDelivered: async () => {
+        const dataset = await Actor.openDataset();
+        const out: OutputItem[] = [];
+        const page = 1000;
+        for (let offset = 0; ; offset += page) {
+          const { items } = await dataset.getData({ offset, limit: page });
+          for (const it of items) if (typeof (it as { id?: unknown }).id === "string") out.push(it as OutputItem);
+          if (items.length < page) break;
+        }
+        return out;
+      },
+    },
     fetchDay: (date) => fetchSumario(date, { requestDelayMs: input.requestDelayMs }),
     push: (items) => Actor.pushData(items),
     sleep,
