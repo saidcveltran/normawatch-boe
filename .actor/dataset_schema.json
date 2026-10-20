@@ -16,7 +16,7 @@
       "section": {
         "type": "string",
         "title": "Sección",
-        "description": "Sección del BOE; este Actor solo lee la sección I."
+        "description": "Sección del BOE: \"1\" (disposiciones generales) o, solo si activas la opción sections, \"3\" (otras disposiciones, con los filtros de la sección III)."
       },
       "department": {
         "type": "string",

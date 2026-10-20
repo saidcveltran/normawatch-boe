@@ -1,6 +1,6 @@
 {
   "title": "Entrada de NormaWatch",
-  "description": "Elige las fechas de publicación del BOE y los filtros opcionales. Solo se lee la sección I (disposiciones generales).",
+  "description": "Elige las fechas de publicación del BOE y los filtros opcionales. Por defecto solo se lee la sección I (disposiciones generales); la sección III (otras disposiciones) es opcional y está restringida.",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
@@ -77,10 +77,23 @@
         ]
       }
     },
+    "sections": {
+      "title": "Secciones del BOE",
+      "type": "array",
+      "description": "Por defecto solo se lee la sección I (disposiciones generales). Si añades la sección III (otras disposiciones), se incluyen únicamente los elementos de un listado cerrado de epígrafes (convenios, ayudas, subvenciones, becas, planes de estudios, impacto ambiental, homologaciones y similares) y se descartan los títulos de adjudicaciones, los que llevan un tratamiento personal (don, doña…) y los que contienen un documento de identidad. Esos filtros reducen el riesgo de datos personales pero no lo eliminan: el filtro puede no detectar un nombre propio dentro de un título admitido, y el tratamiento posterior de los datos (incluido el cumplimiento del RGPD) es de tu responsabilidad. Con la sección III activada la memoria de onlyNew es distinta de la de antes. Máximo 2 entradas.",
+      "editor": "select",
+      "default": ["1"],
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "enum": ["1", "3"],
+        "enumTitles": ["I. Disposiciones generales", "III. Otras disposiciones (opcional, con filtros)"]
+      }
+    },
     "onlyNew": {
       "title": "Solo elementos nuevos",
       "type": "boolean",
-      "description": "Si está activado, omite los elementos que ya se entregaron en ejecuciones anteriores de tu cuenta, recordados por su identificador en el almacén clave-valor con nombre SEEN, con una memoria por cada combinación de departamentos y palabras clave (y de tipos de norma, si eliges alguno) (hasta 50 000 identificadores en cada una; al superarlos se olvidan los más antiguos). Solo se recuerdan los elementos realmente entregados: los que quedan fuera por los filtros o por el máximo de elementos se podrán entregar en una ejecución posterior. Si está desactivado, no se lee ni se escribe SEEN. En cualquier caso, un mismo identificador se entrega una sola vez por ejecución.",
+      "description": "Si está activado, omite los elementos que ya se entregaron en ejecuciones anteriores de tu cuenta, recordados por su identificador en el almacén clave-valor con nombre SEEN, con una memoria por cada combinación de departamentos y palabras clave (y de tipos de norma y de secciones, si eliges alguno distinto del habitual) (hasta 50 000 identificadores en cada una; al superarlos se olvidan los más antiguos). Solo se recuerdan los elementos realmente entregados: los que quedan fuera por los filtros o por el máximo de elementos se podrán entregar en una ejecución posterior. Si está desactivado, no se lee ni se escribe SEEN. En cualquier caso, un mismo identificador se entrega una sola vez por ejecución.",
       "default": false
     },
     "maxItems": {

@@ -7,15 +7,19 @@ export const SEEN_STORE_NAME = "SEEN";
 // Clave del registro: una por cada combinación de departamentos y palabras clave, para que dos
 // conjuntos de filtros distintos no se oculten elementos entre sí. El orden y las mayúsculas no cuentan.
 // El filtro de tipos de norma entra en la clave solo cuando tiene valores, para que quien no lo use
-// conserve la memoria que ya tenía.
-export function seenKey(filters: { departments?: string[]; keywords?: string[]; normTypes?: string[] }): string {
+// conserve la memoria que ya tenía. Lo mismo vale para las secciones: solo entran en la clave cuando no son
+// la sección I sola, de modo que activar la sección III no mezcla su memoria con la de antes.
+export function seenKey(filters: { departments?: string[]; keywords?: string[]; normTypes?: string[]; sections?: string[] }): string {
   const norm = (list: string[] | undefined): string[] =>
     [...new Set((list ?? []).map((s) => s.trim().toLowerCase()))].sort();
   const types = norm(filters.normTypes);
+  const sections = norm(filters.sections);
+  const onlyFirst = sections.length === 0 || (sections.length === 1 && sections[0] === "1");
   const canonical = JSON.stringify({
     departments: norm(filters.departments),
     keywords: norm(filters.keywords),
     ...(types.length > 0 ? { normTypes: types } : {}),
+    ...(onlyFirst ? {} : { sections }),
   });
   return `ids-${createHash("sha256").update(canonical).digest("hex").slice(0, 16)}`;
 }

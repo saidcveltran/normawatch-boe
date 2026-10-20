@@ -1,6 +1,6 @@
 {
   "name": "normawatch-boe",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "NormaWatch: monitor de datos del BOE (sección I, disposiciones generales), en JSON.",
   "private": true,
   "type": "module",

@@ -64,6 +64,7 @@ export type RunState = {
 
 // Huella de la entrada relevante para reanudar. No incluye secretos (canales de aviso) ni la pausa entre peticiones.
 export function inputFingerprint(input: RunInput): string {
+  // Las secciones entran solo cuando no son la I sola, para que un STATE de 1.3 siga valiendo.
   const canonical = JSON.stringify({
     dates: input.dates,
     maxItems: input.maxItems,
@@ -71,6 +72,7 @@ export function inputFingerprint(input: RunInput): string {
     departments: input.departments ?? [],
     keywords: input.keywords ?? [],
     normTypes: input.normTypes ?? [],
+    ...(input.sections !== undefined ? { sections: input.sections } : {}),
   });
   return createHash("sha256").update(canonical).digest("hex");
 }
@@ -208,7 +210,7 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
         await checkpoint(i + 1);
         continue;
       }
-      const parsed = parseSumario(result.body, date, deps.now());
+      const parsed = parseSumario(result.body, date, deps.now(), input.sections);
       const { dropped } = parsed;
       const matching = parsed.items.filter((it) => matchesFilters(it, input));
       const candidates: OutputItem[] = [];

@@ -29,6 +29,8 @@ export type RunInput = {
   keywords?: string[];
   // Tipos de norma del BOE (valores exactos de la lista cerrada); solo aparece cuando hay alguno.
   normTypes?: string[];
+  // Secciones del BOE que se leen, ordenadas; solo aparece cuando no es la sección I sola (por ahora, con la III).
+  sections?: string[];
 };
 
 export type NormalizedInput = {
@@ -40,6 +42,7 @@ export type NormalizedInput = {
   departments: string[];
   keywords: string[];
   normTypes: string[];
+  sections: string[];
 };
 
 export type Filters = { departments?: string[]; keywords?: string[]; normTypes?: string[] };
@@ -131,6 +134,21 @@ function normTypesField(input: Record<string, unknown>): string[] {
   return out;
 }
 
+// Secciones del BOE: solo "1" (disposiciones generales) y "3" (otras disposiciones, con los filtros de
+// section3.ts). Los repetidos se unifican y la lista vacía o ausente significa solo la sección I.
+function sectionsField(input: Record<string, unknown>): string[] {
+  const v = input["sections"];
+  if (v === undefined || v === null) return ["1"];
+  if (!Array.isArray(v)) throw new BoeError("sections debe ser una lista de secciones");
+  if (v.length > MAX_LIST_ENTRIES) throw new BoeError(`sections admite como máximo ${MAX_LIST_ENTRIES} entradas`);
+  const out = new Set<string>();
+  for (const entry of v) {
+    if (entry !== "1" && entry !== "3") throw new BoeError('sections solo admite "1" (disposiciones generales) y "3" (otras disposiciones)');
+    out.add(entry);
+  }
+  return out.size === 0 ? ["1"] : [...out].sort();
+}
+
 // Aplica los valores por defecto y comprueba todos los límites.
 export function normalizeInput(input: Record<string, unknown>, today: string): NormalizedInput {
   const dateFrom = dateField(input, "dateFrom") ?? today;
@@ -150,6 +168,7 @@ export function normalizeInput(input: Record<string, unknown>, today: string): N
     departments: listField(input, "departments"),
     keywords: listField(input, "keywords"),
     normTypes: normTypesField(input),
+    sections: sectionsField(input),
   };
 }
 
@@ -168,6 +187,7 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
     ...(n.departments.length > 0 ? { departments: n.departments } : {}),
     ...(n.keywords.length > 0 ? { keywords: n.keywords } : {}),
     ...(n.normTypes.length > 0 ? { normTypes: n.normTypes } : {}),
+    ...(n.sections.length === 1 && n.sections[0] === "1" ? {} : { sections: n.sections }),
   };
 }
 

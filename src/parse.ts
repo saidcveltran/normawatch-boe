@@ -1,8 +1,10 @@
 // Analizador del sumario del BOE. Solo biblioteca estándar.
-// Conserva únicamente metadatos y enlaces de la sección I; nunca texto íntegro ni nombres de firmantes.
+// Conserva únicamente metadatos y enlaces de la sección I y, si se pide, de la sección III con los
+// filtros de section3.ts; nunca texto íntegro ni nombres de firmantes.
 import { BoeError } from "./errors.ts";
 import { normTypeOf } from "./classify.ts";
 import type { NormType } from "./classify.ts";
+import { isAllowedEpigraph, personGuardHit } from "./section3.ts";
 
 export const SOURCE_LINE = "Fuente de los datos: Agencia Estatal Boletín Oficial del Estado";
 export const SOURCE_URL = "https://www.boe.es";
@@ -28,7 +30,8 @@ function guardText(v: string): string {
 export type OutputItem = {
   id: string;
   date: string;
-  section: "1";
+  // "3" solo aparece si el usuario activa la sección III.
+  section: "1" | "3";
   department: string;
   epigraph: string;
   title: string;
@@ -43,7 +46,16 @@ export type OutputItem = {
 };
 
 // Recuentos de lo descartado: identificador no válido, enlace no válido, filtro de nombres y texto demasiado largo.
-export type Dropped = { badId: number; badUrl: number; nameGuard: number; tooLong: number };
+// Con la sección III activada se añaden los epígrafes fuera del listado y el filtro de adjudicaciones y personas;
+// sin ella esas dos claves no existen, de modo que la salida es la de 1.3.
+export type Dropped = {
+  badId: number;
+  badUrl: number;
+  nameGuard: number;
+  tooLong: number;
+  notAllowed?: number;
+  personGuard?: number;
+};
 
 type Obj = Record<string, unknown>;
 
@@ -117,20 +129,45 @@ export function dropMessages(dropped: Dropped): string[] {
         : `descartados ${dropped.nameGuard} elementos por el filtro de nombres`,
     );
   }
+  const notAllowed = dropped.notAllowed ?? 0;
+  if (notAllowed > 0) {
+    out.push(
+      notAllowed === 1
+        ? "descartado 1 elemento fuera del listado de epígrafes de la sección III"
+        : `descartados ${notAllowed} elementos fuera del listado de epígrafes de la sección III`,
+    );
+  }
+  const personGuard = dropped.personGuard ?? 0;
+  if (personGuard > 0) {
+    out.push(
+      personGuard === 1
+        ? "descartado 1 elemento por el filtro de adjudicaciones y personas de la sección III"
+        : `descartados ${personGuard} elementos por el filtro de adjudicaciones y personas de la sección III`,
+    );
+  }
   return out;
 }
 
-export function parseSumario(json: unknown, date: string, retrievedAt: string): { items: OutputItem[]; dropped: Dropped } {
+// sections: secciones que se leen; por defecto solo la I. La III exige activarla expresamente.
+export function parseSumario(
+  json: unknown,
+  date: string,
+  retrievedAt: string,
+  sections: readonly string[] = ["1"],
+): { items: OutputItem[]; dropped: Dropped } {
   if (!isObj(json) || !isObj(json["data"]) || !isObj(json["data"]["sumario"])) {
     throw new BoeError("documento de sumario inesperado");
   }
   const diarios = json["data"]["sumario"]["diario"];
   if (!Array.isArray(diarios)) throw new BoeError("documento de sumario inesperado: falta diario");
   const items: OutputItem[] = [];
-  const dropped: Dropped = { badId: 0, badUrl: 0, nameGuard: 0, tooLong: 0 };
+  const withThree = sections.includes("3");
+  const dropped: Dropped = { badId: 0, badUrl: 0, nameGuard: 0, tooLong: 0, ...(withThree ? { notAllowed: 0, personGuard: 0 } : {}) };
   for (const diario of many(diarios)) {
     for (const seccion of many(diario["seccion"])) {
-      if (seccion["codigo"] !== "1") continue;
+      const code = seccion["codigo"];
+      if (code !== "1" && code !== "3") continue;
+      if (!sections.includes(code)) continue;
       for (const dep of many(seccion["departamento"])) {
         const groups: { epigraph: string; entries: Obj[] }[] = [
           { epigraph: "", entries: many(dep["item"]) },
@@ -143,9 +180,18 @@ export function parseSumario(json: unknown, date: string, retrievedAt: string): 
               dropped.badId++;
               continue;
             }
+            // Sección III: solo los epígrafes del listado (el resto se descarta sin mirar el título).
+            if (code === "3" && !isAllowedEpigraph(group.epigraph)) {
+              dropped.notAllowed = (dropped.notAllowed ?? 0) + 1;
+              continue;
+            }
             const rawTitle = entry["titulo"];
             if (typeof rawTitle === "string" && NAME_GUARD.test(guardText(rawTitle))) {
               dropped.nameGuard++;
+              continue;
+            }
+            if (code === "3" && typeof rawTitle === "string" && personGuardHit(rawTitle)) {
+              dropped.personGuard = (dropped.personGuard ?? 0) + 1;
               continue;
             }
             const department = text(dep["nombre"]);
@@ -164,7 +210,7 @@ export function parseSumario(json: unknown, date: string, retrievedAt: string): 
             items.push({
               id,
               date,
-              section: "1",
+              section: code,
               department,
               epigraph: group.epigraph,
               title,
