@@ -1,5 +1,6 @@
 // Bucle de ejecución del Actor. Solo biblioteca estándar. El cliente HTTP está en http.ts y se
 // reexporta aquí para que el resto del código tenga un único punto de entrada.
+import { createHash } from "node:crypto";
 import { BoeError, errName } from "./errors.ts";
 import { BASE_URL, MAX_BYTES, RateLimitError, TIMEOUT_MS, USER_AGENT, buildSumarioUrl, fetchSumario } from "./http.ts";
 
@@ -51,6 +52,8 @@ export type RunDeps = {
 // elementos entregados hasta ahora. El resto permite que, tras reanudar, el recuento de peticiones, los días
 // fallidos y las rachas sigan siendo los de la ejecución completa.
 export type RunState = {
+  // Huella de lo que define la ejecución (fechas, filtros, onlyNew, maxItems); un STATE con otra huella se ignora.
+  fingerprint: string;
   nextDate: string | null;
   delivered: number;
   requests: number;
@@ -59,9 +62,23 @@ export type RunState = {
   rateLimitedStreak: number;
 };
 
-function readState(raw: unknown, dates: string[]): RunState | undefined {
+// Huella de la entrada relevante para reanudar. No incluye secretos (canales de aviso) ni la pausa entre peticiones.
+export function inputFingerprint(input: RunInput): string {
+  const canonical = JSON.stringify({
+    dates: input.dates,
+    maxItems: input.maxItems,
+    onlyNew: input.onlyNew === true,
+    departments: input.departments ?? [],
+    keywords: input.keywords ?? [],
+    normTypes: input.normTypes ?? [],
+  });
+  return createHash("sha256").update(canonical).digest("hex");
+}
+
+function readState(raw: unknown, dates: string[], fingerprint: string): RunState | undefined {
   if (typeof raw !== "object" || raw === null) return undefined;
   const r = raw as Record<string, unknown>;
+  if (r["fingerprint"] !== fingerprint) return undefined;
   const count = (v: unknown): number => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : 0);
   let nextDate: string | null;
   if (r["nextDate"] === null) nextDate = null;
@@ -71,6 +88,7 @@ function readState(raw: unknown, dates: string[]): RunState | undefined {
     ? r["failedDates"].filter((d): d is string => typeof d === "string" && dates.includes(d))
     : [];
   return {
+    fingerprint,
     nextDate,
     delivered: count(r["delivered"]),
     requests: count(r["requests"]),
@@ -107,16 +125,19 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
   // Los elementos ya entregados se leen del conjunto de datos (la fuente de verdad: incluye lo entregado entre
   // el último punto de control y la interrupción), de modo que no se repiten ni se pierden para el aviso ni para SEEN.
   const cp = deps.checkpoint;
+  const fingerprint = inputFingerprint(input);
+  let resumedIds: string[] = [];
   if (cp) {
     let state: RunState | undefined;
     try {
-      state = readState(await cp.load(), input.dates);
+      state = readState(await cp.load(), input.dates, fingerprint);
     } catch (err) {
       deps.log.error("No se pudo leer STATE: se empieza desde el principio", { name: errName(err) });
     }
     if (state) {
       try {
         const previous = await cp.loadDelivered();
+        resumedIds = previous.map((it) => it.id);
         for (const it of previous) {
           if (delivered.has(it.id)) continue;
           delivered.add(it.id);
@@ -138,7 +159,22 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
         delivered.clear();
         deliveredItems.length = 0;
         pendingIds.length = 0;
+        resumedIds = [];
       }
+    }
+  }
+  // Sin avisador, SEEN se confirma por día; si el proceso murió entre pushData y seen.add, lo entregado antes de
+  // reanudar podría faltar en SEEN y repetirse al día siguiente. Se añade una vez al reanudar.
+  if (seen && !notifier && resumedIds.length > 0) {
+    try {
+      await seen.add(resumedIds);
+    } catch (seenErr) {
+      deps.log.error("No se pudo guardar SEEN: lo ya entregado se conserva, pero podría repetirse en la próxima ejecución", {
+        name: errName(seenErr),
+        delivered: resumedIds.length,
+      });
+      summary.exitCode = 1;
+      return summary;
     }
   }
   // Guarda el punto de control tras cada día. Un fallo al guardarlo solo se registra: se pierde la posibilidad
@@ -147,6 +183,7 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
     if (!cp) return;
     try {
       await cp.save({
+        fingerprint,
         nextDate: input.dates[nextIndex] ?? null,
         delivered: summary.stored,
         requests: summary.requests,

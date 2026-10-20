@@ -3,12 +3,11 @@ import { BoeError, errName, fetchSumario, madridToday, parseInput, runDays } fro
 import { parseNotifyInput } from "./input.ts";
 import { createNotifier } from "./notify.ts";
 import type { NotifyDeps } from "./notify.ts";
+import type { OutputItem } from "./parse.ts";
 import { SEEN_STORE_NAME, SeenStore, seenKey } from "./seen.ts";
 
-import type { OutputItem } from "./parse.ts";
-
 const STATE_KEY = "STATE";
-const sleep =(ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 await Actor.init();
 let exitCode = 0;

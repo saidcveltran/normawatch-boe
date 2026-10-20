@@ -11,7 +11,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Añadido
 
 - Historial más largo: una ejecución admite hasta 366 días de diferencia entre `dateFrom` y `dateTo` (antes 31). Una entrada de la 1.2 sigue siendo válida y se comporta igual.
-- Con más de 31 días de diferencia, las peticiones siguen siendo de una en una, la pausa efectiva es de al menos 1000 ms y los días se leen del más reciente al más antiguo, de modo que `maxItems` conserva lo más reciente. Con 31 días o menos no cambia nada.
+- Con más de 31 días de diferencia, las peticiones siguen siendo de una en una, la pausa efectiva es de al menos 1000 ms y los días se leen del más reciente al más antiguo, de modo que `maxItems` conserva lo más reciente. Con 31 días o menos no cambia nada, salvo el cortacircuitos, que rige para todos los rangos.
 - Cortacircuitos: cinco días seguidos fallidos (tras los reintentos) detienen la ejecución con código de salida `1`. Un día sin BOE (404) no cuenta como fallo. Se mantienen `Retry-After` y las esperas de 2, 4 y 8 s.
 - Punto de control `STATE` en el almacén clave-valor de la ejecución: se guarda tras cada día y la ejecución se reanuda desde él tras una migración o un reinicio, sin repetir días ni elementos. Lo ya entregado se lee del conjunto de datos de la ejecución, `maxItems` cuenta también lo entregado antes de la interrupción, y `SEEN` y los avisos se comportan igual que antes (con aviso, `SEEN` se confirma una sola vez al final). `STATE` se borra al terminar bien y se conserva si la ejecución acaba con error.
 - README: nuevos límites, la recomendación de una carga inicial seguida de ejecuciones diarias con `onlyNew`, el tiempo medido de una ejecución de un año y una pregunta frecuente sobre el historial.
