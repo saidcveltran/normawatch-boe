@@ -6,7 +6,7 @@
       "id": {
         "type": "string",
         "title": "Identificador",
-        "description": "Identificador del BOE, con la forma BOE-A-AAAA-N."
+        "description": "Identificador del elemento según su boletín: BOE-A-AAAA-N (BOE), disposition.AAAA.N.N (BOJA) o DOG-código (DOG)."
       },
       "date": {
         "type": "string",
@@ -16,12 +16,12 @@
       "section": {
         "type": "string",
         "title": "Sección",
-        "description": "Sección del BOE: \"1\" (disposiciones generales) o, solo si activas la opción sections, \"3\" (otras disposiciones, con los filtros de la sección III)."
+        "description": "Sección: en el BOE, \"1\" (disposiciones generales) o, solo si activas la opción sections, \"3\" (otras disposiciones, con los filtros de la sección III); en los boletines autonómicos, la etiqueta de su sección de disposiciones generales."
       },
       "department": {
         "type": "string",
         "title": "Departamento",
-        "description": "Departamento que emite la disposición, tal como lo publica el BOE."
+        "description": "Departamento que emite la disposición, tal como lo publica el boletín."
       },
       "epigraph": {
         "type": "string",
@@ -36,17 +36,17 @@
       "urlHtml": {
         "type": "string",
         "title": "Enlace HTML",
-        "description": "Enlace a la versión HTML en www.boe.es. Puede faltar."
+        "description": "Enlace a la versión HTML en el sitio oficial del boletín (www.boe.es o www.xunta.gal). Puede faltar."
       },
       "urlPdf": {
         "type": "string",
         "title": "Enlace PDF",
-        "description": "Enlace al PDF en www.boe.es. Puede faltar."
+        "description": "Enlace al PDF en el sitio oficial del boletín (www.boe.es o juntadeandalucia.es). Puede faltar."
       },
       "urlXml": {
         "type": "string",
         "title": "Enlace XML",
-        "description": "Enlace al XML en www.boe.es. Puede faltar."
+        "description": "Enlace al XML en www.boe.es. Solo lo ofrece el BOE; falta en los demás boletines."
       },
       "retrievedAt": {
         "type": "string",
@@ -56,17 +56,22 @@
       "source": {
         "type": "string",
         "title": "Fuente",
-        "description": "Línea de fuente de los datos: Agencia Estatal Boletín Oficial del Estado."
+        "description": "Línea de fuente de los datos del boletín de origen, con su licencia en los boletines autonómicos."
       },
       "sourceUrl": {
         "type": "string",
         "title": "Dirección de la fuente",
-        "description": "Dirección de la fuente de los datos: https://www.boe.es."
+        "description": "Dirección de la fuente de los datos del boletín de origen."
       },
       "normType": {
         "type": "string",
         "title": "Tipo de norma (derivado)",
-        "description": "Campo derivado del título por este Actor; no es un metadato del BOE."
+        "description": "Campo derivado del título por este Actor (en el BOJA, también del tipo que publica el boletín); no es un metadato del BOE ni de los boletines autonómicos."
+      },
+      "bulletin": {
+        "type": "string",
+        "title": "Boletín",
+        "description": "Boletín de origen: \"BOE\", \"BOJA\" o \"DOG\". Campo añadido en la versión 1.5."
       }
     },
     "additionalProperties": true
@@ -76,17 +81,47 @@
       "title": "Resumen",
       "description": "Fecha, tipo de norma, departamento, título y enlaces de cada disposición.",
       "transformation": {
-        "fields": ["date", "normType", "department", "title", "urlPdf", "urlHtml"]
+        "fields": [
+          "date",
+          "bulletin",
+          "normType",
+          "department",
+          "title",
+          "urlPdf",
+          "urlHtml"
+        ]
       },
       "display": {
         "component": "table",
         "properties": {
-          "date": { "label": "Fecha", "format": "text" },
-          "normType": { "label": "Tipo de norma (derivado)", "format": "text" },
-          "department": { "label": "Departamento", "format": "text" },
-          "title": { "label": "Título", "format": "text" },
-          "urlPdf": { "label": "PDF", "format": "link" },
-          "urlHtml": { "label": "Ver en el BOE", "format": "link" }
+          "date": {
+            "label": "Fecha",
+            "format": "text"
+          },
+          "bulletin": {
+            "label": "Boletín",
+            "format": "text"
+          },
+          "normType": {
+            "label": "Tipo de norma (derivado)",
+            "format": "text"
+          },
+          "department": {
+            "label": "Departamento",
+            "format": "text"
+          },
+          "title": {
+            "label": "Título",
+            "format": "text"
+          },
+          "urlPdf": {
+            "label": "PDF",
+            "format": "link"
+          },
+          "urlHtml": {
+            "label": "Ver en el boletín",
+            "format": "link"
+          }
         }
       }
     },
@@ -95,26 +130,81 @@
       "description": "Todos los campos de cada disposición.",
       "transformation": {
         "fields": [
-          "id", "date", "section", "department", "epigraph", "title", "normType",
-          "urlHtml", "urlPdf", "urlXml", "retrievedAt", "source", "sourceUrl"
+          "id",
+          "date",
+          "bulletin",
+          "section",
+          "department",
+          "epigraph",
+          "title",
+          "normType",
+          "urlHtml",
+          "urlPdf",
+          "urlXml",
+          "retrievedAt",
+          "source",
+          "sourceUrl"
         ]
       },
       "display": {
         "component": "table",
         "properties": {
-          "id": { "label": "Identificador", "format": "text" },
-          "date": { "label": "Fecha", "format": "text" },
-          "section": { "label": "Sección", "format": "text" },
-          "department": { "label": "Departamento", "format": "text" },
-          "epigraph": { "label": "Epígrafe", "format": "text" },
-          "title": { "label": "Título", "format": "text" },
-          "normType": { "label": "Tipo de norma (derivado)", "format": "text" },
-          "urlHtml": { "label": "Ver en el BOE", "format": "link" },
-          "urlPdf": { "label": "PDF", "format": "link" },
-          "urlXml": { "label": "XML", "format": "link" },
-          "retrievedAt": { "label": "Obtenido el (derivado)", "format": "date" },
-          "source": { "label": "Fuente", "format": "text" },
-          "sourceUrl": { "label": "Dirección de la fuente", "format": "link" }
+          "id": {
+            "label": "Identificador",
+            "format": "text"
+          },
+          "date": {
+            "label": "Fecha",
+            "format": "text"
+          },
+          "bulletin": {
+            "label": "Boletín",
+            "format": "text"
+          },
+          "section": {
+            "label": "Sección",
+            "format": "text"
+          },
+          "department": {
+            "label": "Departamento",
+            "format": "text"
+          },
+          "epigraph": {
+            "label": "Epígrafe",
+            "format": "text"
+          },
+          "title": {
+            "label": "Título",
+            "format": "text"
+          },
+          "normType": {
+            "label": "Tipo de norma (derivado)",
+            "format": "text"
+          },
+          "urlHtml": {
+            "label": "Ver en el boletín",
+            "format": "link"
+          },
+          "urlPdf": {
+            "label": "PDF",
+            "format": "link"
+          },
+          "urlXml": {
+            "label": "XML",
+            "format": "link"
+          },
+          "retrievedAt": {
+            "label": "Obtenido el (derivado)",
+            "format": "date"
+          },
+          "source": {
+            "label": "Fuente",
+            "format": "text"
+          },
+          "sourceUrl": {
+            "label": "Dirección de la fuente",
+            "format": "link"
+          }
         }
       }
     }

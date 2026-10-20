@@ -6,6 +6,28 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.5.0] - 2026-10-20
+
+### Añadido
+
+- Boletines autonómicos junto al BOE: el campo `bulletins` (selector con `"BOE"`, `"BOJA"` y `"DOG"`, por defecto `["BOE"]`). De cada uno se leen solo las disposiciones generales.
+- BOJA (Junta de Andalucía, CC BY 4.0) por su API de datos abiertos, con una consulta por fecha y una lista de campos cerrada (sin texto íntegro ni HTML).
+- DOG (Xunta de Galicia, CC BY-SA 4.0) por el RSS oficial de la sección I, leído con un lector XML propio y acotado (`src/xml.ts`) que rechaza `<!DOCTYPE` y declaraciones de entidad, con tope de tamaño, de profundidad y de elementos. El RSS solo contiene el último número: no sirve para días pasados.
+- Campo `bulletin` en cada elemento (`"BOE"` en los del BOE, único cambio de su salida), y `id`, `section`, `source` y `sourceUrl` propios de cada boletín. `urlXml` falta donde la fuente no lo tiene.
+- Aislamiento de fallos: un boletín roto registra el error y falla solo sus días, con su propio cortacircuitos; la ejecución termina con código 1 únicamente si fallan todos los elegidos. `STATE` guarda el boletín siguiente y el estado de cada fuente, y al reanudar no se repite ni se salta ningún día de ninguna fuente.
+- Los resúmenes por correo, Telegram y Slack muestran el boletín de cada elemento cuando hay más de uno, y su pie recoge la atribución de cada fuente.
+- README: sección «Boletines autonómicos» con fuentes, licencias, líneas de fuente, la nota de compartir igual del DOG, formas de identificador, límites y lo que no cubre (BOCM, DOGC, DOGV, BOA y BOPV).
+
+### Cambiado
+
+- El código del BOE pasa a `src/sources/boe.ts` sin cambiar su comportamiento; el cliente HTTP común (`src/http.ts`) lo usan todas las fuentes.
+- La clave de `SEEN` y la huella de reanudación incluyen `bulletins` solo cuando no es `["BOE"]`: con el valor por defecto, son idénticas a las de la 1.4. La memoria de `SEEN` admite los identificadores de cada boletín.
+- El `User-Agent` pasa a `normawatch-boe/1.5`.
+
+### No incluido
+
+- BOPV (País Vasco): no se pudo confirmar una API oficial por fecha ni su sección de disposiciones generales, y no se extrae HTML.
+
 ## [1.4.0] - 2026-10-20
 
 ### Añadido

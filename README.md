@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.4.0-1636B5?style=flat" alt="Versión 1.4.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.0-1636B5?style=flat" alt="Versión 1.5.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -14,7 +14,7 @@
 
 **NormaWatch** es un **Actor de Apify** (así llama Apify a los programas que se ejecutan en su plataforma) que lista las nuevas **disposiciones generales** (sección I) del Boletín Oficial del Estado (BOE), solo con metadatos y enlaces, para que puedas vigilar la normativa nueva sin leer el sumario cada día. Está pensado para quien sigue la normativa española: asesorías, despachos, equipos de cumplimiento normativo y periodistas. Es **gratuito**: no tiene precio ni suscripción.
 
-> Basado en datos de la [Agencia Estatal Boletín Oficial del Estado](https://www.boe.es). Este Actor no es un servicio oficial del BOE ni de la AEBOE, y su resultado no es un texto oficial. La Agencia no participa en este Actor, ni lo patrocina, ni lo respalda.
+> Basado en datos de la [Agencia Estatal Boletín Oficial del Estado](https://www.boe.es) y, si lo eliges, de la Junta de Andalucía (BOJA, CC BY 4.0) y la Xunta de Galicia (DOG, CC BY-SA 4.0; ver [Boletines autonómicos](#boletines-autonómicos)). Este Actor no es un servicio oficial del BOE ni de la AEBOE, y su resultado no es un texto oficial. La Agencia no participa en este Actor, ni lo patrocina, ni lo respalda.
 
 ## Contenido
 
@@ -25,6 +25,7 @@
 - [Salida](#salida)
 - [Tipo de norma (derivado)](#tipo-de-norma-derivado)
 - [Sección III (opcional)](#sección-iii-opcional)
+- [Boletines autonómicos](#boletines-autonómicos)
 - [Vista de tabla en la consola de Apify](#vista-de-tabla-en-la-consola-de-apify)
 - [Ejemplo de resultado](#ejemplo-de-resultado)
 - [Cómo funciona onlyNew](#cómo-funciona-onlynew)
@@ -75,6 +76,7 @@ Todos los campos son opcionales. Una entrada vacía devuelve las disposiciones d
 | `keywords` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su título contiene alguno de los textos (sin distinguir mayúsculas; texto literal). |
 | `normTypes` | lista de tipos de norma | sin filtro (todos los tipos) | Selector múltiple. Valores admitidos, tal como los escribe el BOE: `Corrección de errores`, `Instrumento de ratificación`, `Real Decreto Legislativo`, `Real Decreto-ley`, `Real Decreto`, `Ley Orgánica`, `Ley Foral`, `Ley`, `Decreto Legislativo`, `Decreto-ley`, `Decreto`, `Orden`, `Resolución`, `Circular`, `Acuerdo internacional` y `Otro`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Tipo de norma](#tipo-de-norma-derivado). |
 | `sections` | lista de secciones | `["1"]` (solo la sección I) | Selector múltiple con `"1"` (disposiciones generales) y `"3"` (otras disposiciones, restringida y con filtros). Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Sección III](#sección-iii-opcional). |
+| `bulletins` | lista de boletines | `["BOE"]` | Selector múltiple con `"BOE"`, `"BOJA"` y `"DOG"`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Boletines autonómicos](#boletines-autonómicos). |
 | `onlyNew` | verdadero o falso | `false` | Ver [Cómo funciona `onlyNew`](#cómo-funciona-onlynew). |
 | `emailTo` | texto (secreto) | sin correo | Una sola dirección. En el plan gratuito de Apify debe ser la de tu propia cuenta de Apify. Se guarda cifrada. Ver [Avisos](#avisos-por-correo-telegram-y-slack). |
 | `notifyWhenEmpty` | verdadero o falso | `false` | Por defecto solo se avisa si la ejecución entrega algo; con `true` se avisa también cuando no hay novedades. |
@@ -101,12 +103,13 @@ Ejemplo de entrada (ejemplo ilustrativo, en el formato de entrada de Apify):
 
 ## Salida
 
-Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivado `normType` (ver la tabla siguiente):
+Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivado `normType` y, desde la 1.5, `bulletin` (ver la tabla siguiente y [Boletines autonómicos](#boletines-autonómicos), donde se explican los valores de `id`, `section`, `source` y `sourceUrl` de cada boletín):
 
 | Campo | Descripción |
 |---|---|
 | `id` | Identificador del BOE, con la forma `BOE-A-AAAA-N`. |
 | `date` | Fecha de publicación del sumario (`AAAA-MM-DD`). |
+| `bulletin` | Desde la versión 1.5: boletín de origen, `"BOE"`, `"BOJA"` o `"DOG"`. |
 | `section` | `"1"` (sección I). Vale `"3"` solo en los elementos de la sección III, y solo si activas `sections` (ver [Sección III](#sección-iii-opcional)). |
 | `department` | Departamento que emite la disposición, tal como lo publica el BOE. |
 | `epigraph` | Epígrafe bajo el que aparece, o texto vacío si no tiene. |
@@ -168,6 +171,42 @@ Límites, con toda claridad:
 - El listado se amplía solo mediante un cambio revisado del Actor. Si ves en un resultado un título que nombra a una persona, abre una incidencia como se explica en [Contacto](#contacto), indicando **solo el identificador del BOE (`BOE-A-AAAA-N`) y la fecha**, nunca el título, ningún nombre ni ningún otro dato personal; lo retiramos en un plazo máximo de 7 días actualizando el filtro.
 - El `normType` de estos elementos también se deriva del título y suele ser `Resolución` u `Otro`. Los filtros `departments`, `keywords` y `normTypes` se aplican igual.
 - `onlyNew` guarda una memoria distinta cuando la sección III está activada, de modo que activarla no oculta nada ni mezcla lo ya entregado.
+
+## Boletines autonómicos
+
+Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales** de dos boletines autonómicos con el campo `bulletins`. Por defecto vale `["BOE"]` y una ejecución sin el campo devuelve lo mismo que en la 1.4, con un campo más (`bulletin: "BOE"`). Ejemplo: `"bulletins": ["BOE", "BOJA", "DOG"]`.
+
+| Boletín | Fuente oficial | Licencia | Línea de fuente (`source`) |
+|---|---|---|---|
+| BOJA (Andalucía) | API de datos abiertos de la Junta de Andalucía, `datos.juntadeandalucia.es/api/v0/boja`, sección «1. Disposiciones generales» | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `Fuente: Junta de Andalucía, BOJA (CC BY 4.0)` |
+| DOG (Galicia) | RSS oficial de la sección I del Diario Oficial de Galicia, `www.xunta.gal/diario-oficial-galicia` | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.es) (conjunto «Actualidade do Diario Oficial de Galicia» de [Abertos Xunta](https://abertos.xunta.gal/catalogo/administracion-publica/-/dataset/0262/actualidade-diario-oficial-galicia)) | `Fuente: Xunta de Galicia, Diario Oficial de Galicia (CC BY-SA 4.0)` |
+
+### Qué cambia en la salida
+
+- Todos los elementos llevan `bulletin` (`"BOE"`, `"BOJA"` o `"DOG"`) y los mismos 12 campos de siempre. `source` y `sourceUrl` son los del boletín de origen; `section` es la etiqueta de su sección (`1. Disposiciones generales` en el BOJA, `I. Disposiciones generales` en el DOG).
+- **Identificadores** de cada boletín (no siguen el formato `BOE-A-` del BOE): BOE `BOE-A-AAAA-N`; BOJA `disposition.AAAA.N.N` (el identificador del propio BOJA); DOG `DOG-código`, donde el código es el nombre del anuncio en la dirección oficial (por ejemplo `DOG-AnuncioC3K1-280926-0001`).
+- `urlXml` solo lo ofrece el BOE; el BOJA ofrece `urlPdf` y el DOG ofrece `urlHtml`. Los enlaces solo se conservan si apuntan al sitio oficial del boletín.
+- `normType` se deduce del título; en el BOJA, si el título no empieza por un tipo conocido, se usa el tipo que publica el boletín. Si no se reconoce, vale `Otro`. Los filtros `departments`, `keywords` y `normTypes` funcionan igual en todos los boletines.
+- La opción `sections` (sección III) se aplica **solo al BOE**.
+- El filtro de tratamientos personales (don, doña, D.…) se aplica a todos los boletines. De los boletines autonómicos solo se leen las disposiciones generales; nombramientos, adjudicaciones y anuncios se descartan por su sección y se cuentan en el registro.
+
+### Memoria y reanudación
+
+`onlyNew` y la reanudación (`STATE`) tienen en cuenta los boletines elegidos solo cuando no es el BOE solo, así que quien no usa la opción conserva su memoria. Si un boletín falla (error, límite de peticiones o cortacircuitos), solo fallan sus días y el resto sigue; la ejecución termina con código 1 únicamente si fallan todos los boletines elegidos. En el registro y en el resultado, los días fallidos de un boletín autonómico aparecen como `BOJA:AAAA-MM-DD`. Al reanudar tras una migración se continúa en el mismo día y en el mismo boletín, sin repetir ni saltar ninguno.
+
+### Límites
+
+- BOJA: una petición por fecha (hasta 200 elementos por página, como máximo 5 páginas), con la lista de campos cerrada: no se pide nunca el texto íntegro ni HTML. Un día sin boletín no es un error.
+- DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida; no sirve para recuperar días pasados, y conviene programar la ejecución a diario. Se pide una sola vez por ejecución.
+- Pausa mínima, `User-Agent` identificado, sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
+
+### Licencias y atribución
+
+Mantén la línea de fuente (`source`) de cada elemento y la licencia de su boletín. **DOG (CC BY-SA 4.0, «compartir igual»)**: si compartes o publicas datos del DOG, incluidos los resúmenes que enviamos por correo, Telegram o Slack, o un conjunto que los combine con otros, debes citar la fuente, indicar si los has modificado y **distribuir tu obra derivada con la misma licencia CC BY-SA 4.0**, o una compatible. Eso afecta a lo que tú publicas con esos datos, no al uso interno. Los datos del BOJA (CC BY 4.0) solo exigen citar la fuente y la licencia. Consulta el texto legal de cada licencia para los detalles.
+
+### Qué no cubre
+
+No se leen BOCM (Madrid), DOGC (Cataluña), DOGV (Comunitat Valenciana) ni BOA (Aragón) porque no hay un punto de acceso automático y una licencia abierta confirmados. **BOPV (País Vasco)** tampoco está en la 1.5: su API de Open Data Euskadi no pudo confirmarse y el sumario en XML solo cubre el último número, sin la sección. No se hace extracción de páginas HTML. Cada boletín puede cambiar su formato; si falla, solo falla ese boletín.
 
 ## Vista de tabla en la consola de Apify
 
