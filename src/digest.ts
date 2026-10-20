@@ -172,7 +172,7 @@ function chatChunks(
       current = "";
       currentDept = undefined;
       block = chatBlock(it, r, true);
-      if (block.length > limit) block = r.text(it.normType);
+      if (block.length > limit) block = r.text(cut(oneLine(it.normType), 50));
     }
     current = current === "" ? block : `${current}\n\n${block}`;
     currentDept = it.department;
