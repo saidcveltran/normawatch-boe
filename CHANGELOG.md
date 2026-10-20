@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Cambiado
+
+- Sección III: el filtro de adjudicaciones y personas ignora tildes, espacios raros y formas de compatibilidad; reconoce DNI y NIE con puntos, guiones o espacios, y DNI enmascarados más variados; y descarta también los tratamientos `Sr.`, `Sra.`, `señor`, `señora`, `Dr.` y `Dra.`.
+- Para pedir la retirada de un título, la incidencia pública debe llevar **solo el identificador del BOE (`BOE-A-AAAA-N`) y la fecha**, nunca el título ni datos personales; se retira en un plazo máximo de 7 días.
+- README: aclarado que las tildes del epígrafe deben coincidir exactamente.
+
 ## [1.4.0] - 2026-10-20
 
 ### Añadido

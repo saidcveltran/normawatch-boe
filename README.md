@@ -153,10 +153,10 @@ Desde la versión 1.4 puedes añadir la **sección III** del BOE («Otras dispos
 
 La sección III incluye muchos títulos que nombran a personas físicas (indultos, premios, condecoraciones, recursos, listas de adjudicatarios…). Por eso el Actor **no la lee entera**: aplica cuatro controles.
 
-1. **Listado cerrado de epígrafes.** Solo pasan los elementos cuyo epígrafe es exactamente uno de estos (sin distinguir mayúsculas ni la forma de escribir los acentos): `Convenios`, `Encomienda de gestión`, `Delegación de competencias`, `Planes de estudios`, `Cartas de servicios`, `Subvenciones`, `Ayudas`, `Becas`, `Impacto ambiental`, `Instalaciones eléctricas`, `Homologaciones`, `Normalización`, `Mercado de divisas` y `Convenios colectivos de trabajo`. Todo lo demás se descarta, también los epígrafes parecidos (por ejemplo `Comunitat Valenciana. Convenio`, que no está en el listado), los elementos sin epígrafe y epígrafes como indultos, premios, títulos nobiliarios, recursos, condecoraciones, fundaciones, reales academias o sentencias.
-2. **Filtro de tratamientos personales**, el mismo de la sección I (`don`, `doña`, `D.`, `D.ª`, `Dª`, `Dña`).
-3. **Filtro de adjudicaciones y personas.** Se descarta el título que contiene alguna de estas expresiones, sin distinguir mayúsculas: `se conceden`, `se concede`, `concesión de los premios`, `a favor de`, `interpuesto por`, `se emplaza`, `beneficiari`, `adjudica` o `relación de`. Así se conservan las convocatorias, las bases y los convenios, y se descartan las listas de premiados o adjudicatarios.
-4. **Documentos de identidad.** Se descarta el título que contiene algo con la forma de un DNI (ocho cifras y una letra), de un NIE (X, Y o Z, siete cifras y una letra) o de un DNI enmascarado (`***1234**`).
+1. **Listado cerrado de epígrafes.** Solo pasan los elementos cuyo epígrafe es exactamente uno de estos (sin distinguir mayúsculas, pero las tildes deben coincidir exactamente: `Normalizacion` sin tilde no pasa): `Convenios`, `Encomienda de gestión`, `Delegación de competencias`, `Planes de estudios`, `Cartas de servicios`, `Subvenciones`, `Ayudas`, `Becas`, `Impacto ambiental`, `Instalaciones eléctricas`, `Homologaciones`, `Normalización`, `Mercado de divisas` y `Convenios colectivos de trabajo`. Todo lo demás se descarta, también los epígrafes parecidos (por ejemplo `Comunitat Valenciana. Convenio`, que no está en el listado), los elementos sin epígrafe y epígrafes como indultos, premios, títulos nobiliarios, recursos, condecoraciones, fundaciones, reales academias o sentencias.
+2. **Filtro de tratamientos personales**, el mismo de la sección I (`don`, `doña`, `D.`, `D.ª`, `Dª`, `Dña`), al que en la sección III se suman `Sr.`, `Sra.`, `señor`, `señora`, `Dr.` y `Dra.`.
+3. **Filtro de adjudicaciones y personas.** Se descarta el título que contiene alguna de estas expresiones, sin distinguir mayúsculas: `se conceden`, `se concede`, `concesión de los premios`, `a favor de`, `interpuesto por`, `se emplaza`, `beneficiari`, `adjudica` o `relación de`. La comparación ignora las tildes, los espacios repetidos o raros (por ejemplo el espacio de no separación) y las formas de compatibilidad (letras de ancho completo). Así se conservan las convocatorias, las bases y los convenios, y se descartan las listas de premiados o adjudicatarios.
+4. **Documentos de identidad.** Se descarta el título que contiene algo con la forma de un DNI (ocho cifras y una letra, también con puntos, guion o espacio, como `12.345.678-Z`), de un NIE (X, Y o Z, siete cifras y una letra, también con separadores, como `X-1234567-L`) o de un DNI enmascarado (como `***4567*` o `***4.567**`).
 
 Como en la sección I, solo se guardan metadatos y enlaces a `www.boe.es`: nunca el texto íntegro ni los anexos. En el registro de la ejecución solo aparecen los **recuentos** de lo descartado por el listado y por los filtros, nunca los títulos.
 
@@ -165,7 +165,7 @@ Límites, con toda claridad:
 - **El filtro puede no detectar un nombre.** Es un filtro de texto sencillo, no entiende el contenido: un título de un epígrafe admitido que nombre a una persona de una forma que ninguna de las reglas anteriores reconoce (por ejemplo, el nombre de un autónomo que figura como razón social) pasará. Y puede descartar elementos que no tenían ningún problema.
 - **No sustituye a una revisión.** Si vas a tratar, publicar o cruzar estos datos, el tratamiento posterior es **responsabilidad tuya**, incluido el cumplimiento del RGPD, de la LOPDGDD y de las condiciones de reutilización del BOE. Si usas la sección III, revisa lo que obtienes antes de difundirlo.
 - **Es opcional**: si no la necesitas, déjala desactivada.
-- El listado se amplía solo mediante un cambio revisado del Actor. Si ves en un resultado un título que nombra a una persona, avísanos en la dirección de [Contacto](#contacto) y los filtros se actualizarán en un plazo máximo de 7 días.
+- El listado se amplía solo mediante un cambio revisado del Actor. Si ves en un resultado un título que nombra a una persona, abre una incidencia como se explica en [Contacto](#contacto), indicando **solo el identificador del BOE (`BOE-A-AAAA-N`) y la fecha**, nunca el título, ningún nombre ni ningún otro dato personal; lo retiramos en un plazo máximo de 7 días actualizando el filtro.
 - El `normType` de estos elementos también se deriva del título y suele ser `Resolución` u `Otro`. Los filtros `departments`, `keywords` y `normTypes` se aplican igual.
 - `onlyNew` guarda una memoria distinta cuando la sección III está activada, de modo que activarla no oculta nada ni mezcla lo ya entregado.
 
@@ -349,4 +349,6 @@ MIT: puedes usar, copiar, modificar y distribuir el código, incluso con fines c
 
 ## Contacto
 
-Dudas, errores o sugerencias: abre una incidencia en [GitHub](https://github.com/saidcveltran/normawatch-boe/issues).
+Dudas, errores o sugerencias: abre una incidencia en [GitHub](https://github.com/saidcveltran/normawatch-boe/issues). Las incidencias son públicas.
+
+**Para pedir la retirada de un título** (por ejemplo, uno de la sección III que nombre a una persona), abre una incidencia con **solo el identificador del BOE (`BOE-A-AAAA-N`) y la fecha**. **Nunca escribas el título, ningún nombre ni ningún otro dato personal**, porque la incidencia es pública. Lo retiramos en un plazo máximo de 7 días actualizando el filtro.

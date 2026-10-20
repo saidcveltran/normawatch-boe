@@ -30,7 +30,17 @@ export function isAllowedEpigraph(epigraph: string): boolean {
   return ALLOWED.has(fold(epigraph));
 }
 
-// Expresiones de adjudicación o de persona concreta, como subcadena en minúsculas.
+// Pliegue común del título y de las expresiones, en este orden: NFKD (separa tildes y lleva las formas de
+// compatibilidad a su forma básica; «İ» queda como «i» más un punto combinado), se quitan marcas (\p{M}) y
+// caracteres invisibles (\p{Cf}), todo espacio (incluidos NBSP, U+202F y los finos) pasa a uno solo y, si se
+// pide, a minúsculas. Así «concesion» y «concesión» coinciden. Solo para el filtro de personas: el listado de
+// epígrafes sigue exigiendo las tildes.
+const foldText = (v: string, lower: boolean): string => {
+  const f = v.normalize("NFKD").replace(/[\p{M}\p{Cf}]/gu, "").replace(/\s+/gu, " ");
+  return lower ? f.toLowerCase() : f;
+};
+
+// Expresiones de adjudicación o de persona concreta, ya plegadas, como subcadena.
 const AWARD_PHRASES: readonly string[] = [
   "se conceden",
   "se concede",
@@ -41,21 +51,24 @@ const AWARD_PHRASES: readonly string[] = [
   "beneficiari",
   "adjudica",
   "relación de",
-];
+].map((p) => foldText(p, true));
 
-// Documento de identidad: DNI, NIE y DNI enmascarado. La letra se admite en minúscula (más estricto que
-// lo habitual en el BOE) porque un falso positivo solo cuesta un elemento.
+// Documentos de identidad, sobre el texto plegado. Las formas compactas (sin espacios) admiten la letra en
+// minúscula; las que llevan espacio exigen mayúsculas para no confundir «12.345.678 y otras» con un DNI.
 const DNI = /\b[0-9]{8}[A-Z]\b/i;
 const NIE = /\b[XYZ][0-9]{7}[A-Z]\b/i;
-const DNI_MASKED = /\*{3}[0-9]{4}\*{2}/;
+const DNI_SEP = /(?<![\d.,])(?:\d{2}\.?\d{3}\.?\d{3}|\d\.\d{3}\.\d{3})(?:[.-]?[A-Za-z]|\s[A-Z])(?![\p{L}\d])/u;
+const NIE_SEP = /(?<![\p{L}\d])(?:[XYZxyz][.-]?\d{7}[.-]?[A-Za-z]|[XYZ][\s.-]?\d{7}[\s.-]?[A-Z])(?![\p{L}\d])/u;
+const DNI_MASKED = /\*{2,}\d{1,2}\.?\d{3}\*+/;
 
-const INVISIBLE = /\p{Cf}/gu;
+// Tratamientos de cortesía, sobre el texto plegado en minúsculas («señor» queda «senor»).
+const COURTESY = /(?<![\p{L}\d])(?:sra?|dra?)\.|(?<![\p{L}\d])senora?(?![\p{L}\d])/u;
 
-// Verdadero si el título es de una adjudicación o puede nombrar a una persona física. El texto se normaliza
-// a NFC y se le quitan los caracteres invisibles, igual que en el filtro de tratamientos personales.
+// Verdadero si el título es de una adjudicación o puede nombrar a una persona física.
 export function personGuardHit(title: string): boolean {
-  const clean = title.normalize("NFC").replace(INVISIBLE, "");
+  const clean = foldText(title, false);
   const lower = clean.toLowerCase();
   if (AWARD_PHRASES.some((p) => lower.includes(p))) return true;
-  return DNI.test(clean) || NIE.test(clean) || DNI_MASKED.test(clean);
+  if (COURTESY.test(lower)) return true;
+  return DNI.test(clean) || NIE.test(clean) || DNI_SEP.test(clean) || NIE_SEP.test(clean) || DNI_MASKED.test(clean);
 }
