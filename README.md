@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.2.2-1636B5?style=flat" alt="Versión 1.2.2"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.3.0-1636B5?style=flat" alt="Versión 1.3.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -40,7 +40,7 @@
 
 ## Qué hace
 
-- Consulta el sumario diario del BOE (API de datos abiertos) para las fechas que indiques, hasta 32 días en una ejecución.
+- Consulta el sumario diario del BOE (API de datos abiertos) para las fechas que indiques, hasta 367 días (un año) en una ejecución.
 - Se queda solo con la **sección I (disposiciones generales)** y devuelve, por cada una, sus **metadatos y los enlaces** oficiales en HTML, PDF y XML.
 - Filtra por **departamento**, por **palabras del título** y por **tipo de norma**.
 - Con `onlyNew` entrega solo lo que no se había entregado antes, pensado para una ejecución programada cada día.
@@ -68,7 +68,7 @@ Todos los campos son opcionales. Una entrada vacía devuelve las disposiciones d
 | Campo | Tipo | Valor por defecto | Límites |
 |---|---|---|---|
 | `dateFrom` | texto `AAAA-MM-DD` | hoy (Europe/Madrid) | Fecha real del calendario; no puede ser posterior a hoy. |
-| `dateTo` | texto `AAAA-MM-DD` | el valor de `dateFrom` | No puede ser anterior a `dateFrom` ni posterior a hoy; como máximo 31 días después de `dateFrom`. |
+| `dateTo` | texto `AAAA-MM-DD` | el valor de `dateFrom` | No puede ser anterior a `dateFrom` ni posterior a hoy; como máximo 366 días después de `dateFrom` (367 fechas, algo más de un año). Con más de 31 días de diferencia se leen primero los días más recientes y la pausa entre peticiones es de al menos 1000 ms. |
 | `departments` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su departamento contiene alguno de los textos (sin distinguir mayúsculas; texto literal, no expresión regular). |
 | `keywords` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su título contiene alguno de los textos (sin distinguir mayúsculas; texto literal). |
 | `normTypes` | lista de tipos de norma | sin filtro (todos los tipos) | Selector múltiple. Valores admitidos, tal como los escribe el BOE: `Corrección de errores`, `Instrumento de ratificación`, `Real Decreto Legislativo`, `Real Decreto-ley`, `Real Decreto`, `Ley Orgánica`, `Ley Foral`, `Ley`, `Decreto Legislativo`, `Decreto-ley`, `Decreto`, `Orden`, `Resolución`, `Circular`, `Acuerdo internacional` y `Otro`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Tipo de norma](#tipo-de-norma-derivado). |
@@ -188,7 +188,7 @@ NormaWatch es gratuito: el autor no cobra nada por usarlo ni hay suscripción. C
 
 Límites del Actor:
 
-- La fecha final puede ser como máximo 31 días posterior a la inicial (hasta 32 días en total), y ninguna fecha puede ser posterior a hoy.
+- La fecha final puede ser como máximo 366 días posterior a la inicial (hasta 367 días en total), y ninguna fecha puede ser posterior a hoy.
 - Máximo de elementos por ejecución: de 1 a 10 000 (500 por defecto).
 - Memoria configurada: 256 MB (también por defecto en cada ejecución). Tiempo máximo de ejecución por defecto: 3600 s.
 
@@ -199,20 +199,33 @@ En pocas palabras: el Actor consulta el BOE con calma, haciendo las peticiones d
 Detalles técnicos:
 
 - Las peticiones se hacen de una en una, con una pausa mínima de 500 ms entre ellas (1000 ms por defecto).
-- Una petición por día del intervalo; la fecha final puede ser como máximo 31 días posterior a la inicial (hasta 32 días en total).
+- Una petición por día del intervalo; la fecha final puede ser como máximo 366 días posterior a la inicial (hasta 367 días en total).
+- Con más de 31 días de diferencia entre `dateFrom` y `dateTo` (ejecuciones largas, hasta 366), la pausa efectiva entre peticiones es de al menos 1000 ms aunque configures `requestDelayMs` con menos, y los días se leen del más reciente al más antiguo, de modo que `maxItems` conserva lo más reciente. Con 31 días o menos todo sigue como antes.
+- Cortacircuitos: si cinco días seguidos fallan (tras sus reintentos), la ejecución se detiene con código de salida `1` para no seguir cargando a un servidor con problemas. Un día sin BOE (404) no cuenta como fallo.
 - Tiempo máximo de 30 s por petición.
 - Ante una respuesta 429 o 5xx se reintenta hasta 3 veces con esperas de 2, 4 y 8 s (respetando `Retry-After` si lo envía el BOE, hasta 60 s). Si el BOE responde con límite de peticiones o error del servidor en dos días seguidos, la ejecución se detiene.
 - Un 404 se interpreta como un día sin BOE (sin elementos).
 - Las respuestas de más de 4 MiB se descartan.
 - El Actor se identifica ante el BOE con un `User-Agent` propio.
 
+### Historial largo (hasta un año)
+
+Una sola ejecución puede cubrir hasta 366 días de diferencia (367 fechas). Las peticiones son secuenciales, a razón de una por segundo como máximo, así que una ejecución así tarda unos 7 o 8 minutos (medido el 20 de octubre de 2026 en una ejecución local de 367 días: 367 peticiones, 7 min 19 s, sin fallos; en Apify puede variar). El BOE no publica un límite de peticiones, pero sus condiciones de reutilización le permiten suspender el acceso, por eso el Actor es prudente y se detiene ante fallos repetidos.
+
+Cómo se comporta:
+
+- **Punto de control.** Tras cada día el Actor guarda en el almacén clave-valor de la ejecución, bajo la clave `STATE`, la siguiente fecha por leer y lo entregado. Si Apify migra la ejecución a otro servidor o la reinicia, continúa desde esa fecha sin repetir días. Lo ya entregado se lee del propio conjunto de datos de la ejecución, así que no se duplica ningún elemento ni se pierde para el aviso o para `SEEN`. `maxItems` cuenta también lo entregado antes de la interrupción. Al terminar correctamente, `STATE` se borra.
+- **`SEEN` y avisos.** Sin cambios: con aviso configurado, `SEEN` se confirma una sola vez al final y solo si el aviso salió bien; sin aviso, se confirma tras cada día, como en 1.2.
+- **Orden.** Con más de 31 días, del más reciente al más antiguo.
+- **Consejo.** Haz **una carga inicial** del historial que necesites (una ejecución) y después **ejecuciones diarias con `onlyNew`**: así cada día solo se consulta un día del BOE.
+
 ### Errores y códigos de salida
 
 | Código | Significado |
 |---|---|
 | `0` | Ejecución correcta. Puede haber días con error aislado: se registran las fechas, y el resto de días se entrega. |
-| `1` | Falló todo el intervalo (todos los días con error), el BOE respondió con límite de peticiones o error del servidor en días seguidos, no se pudo guardar `SEEN`, o hubo un error inesperado. |
-| `2` | Entrada no válida (por ejemplo, fecha futura, intervalo con fecha final más de 31 días posterior a la inicial, un campo con el tipo equivocado o un campo de aviso mal formado). El mensaje del registro indica el campo, nunca su valor. |
+| `1` | Falló todo el intervalo (todos los días con error), el BOE respondió con límite de peticiones o error del servidor en días seguidos, fallaron cinco días seguidos (cortacircuitos), no se pudo guardar `SEEN`, o hubo un error inesperado. |
+| `2` | Entrada no válida (por ejemplo, fecha futura, intervalo con fecha final más de 366 días posterior a la inicial, un campo con el tipo equivocado o un campo de aviso mal formado). El mensaje del registro indica el campo, nunca su valor. |
 | `3` | Los elementos se entregaron al conjunto de datos, pero al menos un aviso (correo, Telegram o Slack) no salió. |
 
 El registro contiene solo recuentos, fechas y estados, nunca títulos ni contenido de la respuesta.
@@ -233,6 +246,10 @@ Del sumario diario del BOE, que la Agencia Estatal Boletín Oficial del Estado p
 ### ¿El tipo de norma es oficial?
 
 No. El BOE no lo publica en el sumario: lo deduce este Actor del inicio del título, puede equivocarse y se marca como derivado. Ver [Tipo de norma (derivado)](#tipo-de-norma-derivado).
+
+### ¿Puedo traer el historial de un año?
+
+Sí, desde la versión 1.3: una ejecución admite hasta 366 días de diferencia entre `dateFrom` y `dateTo` (367 fechas). Tarda unos 7 u 8 minutos, porque hace una petición por segundo. El BOE conserva sumarios de muchos años, pero esta versión solo se ha probado con el último año. Si necesitas más, lanza varias ejecuciones de hasta 366 días. Haz la carga una vez y después programa ejecuciones diarias con `onlyNew`.
 
 ### ¿Cómo recibo solo lo nuevo cada día?
 
