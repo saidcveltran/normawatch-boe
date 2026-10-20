@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.2.2] - 2026-10-20
+
+### Corregido
+
+- La columna Fecha de la vista de tabla muestra la fecha del BOE tal cual (antes aparecía el día anterior a las 22:00 UTC).
+
 ## [1.2.1] - 2026-10-20
 
 ### Corregido

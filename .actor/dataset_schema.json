@@ -81,7 +81,7 @@
       "display": {
         "component": "table",
         "properties": {
-          "date": { "label": "Fecha", "format": "date" },
+          "date": { "label": "Fecha", "format": "text" },
           "normType": { "label": "Tipo de norma (derivado)", "format": "text" },
           "department": { "label": "Departamento", "format": "text" },
           "title": { "label": "Título", "format": "text" },
@@ -103,7 +103,7 @@
         "component": "table",
         "properties": {
           "id": { "label": "Identificador", "format": "text" },
-          "date": { "label": "Fecha", "format": "date" },
+          "date": { "label": "Fecha", "format": "text" },
           "section": { "label": "Sección", "format": "text" },
           "department": { "label": "Departamento", "format": "text" },
           "epigraph": { "label": "Epígrafe", "format": "text" },
