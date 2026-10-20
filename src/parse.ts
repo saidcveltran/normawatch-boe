@@ -25,6 +25,23 @@ export function nameGuardHit(title: string): boolean {
   return NAME_GUARD.test(guardText(title));
 }
 
+// Una relación del documento con otra norma (opción relations, solo BOE sección I).
+export type Change = {
+  // Palabra en castellano y en minúsculas («deroga», «modifica», «sustituye»…).
+  action: string;
+  // Código numérico de la tabla oficial de relaciones del BOE.
+  code: number;
+  targetId: string;
+  // Solo para identificadores BOE-A: enlace al texto consolidado, de carácter meramente informativo.
+  targetUrl?: string;
+  // Texto del BOE sobre lo afectado, recortado; falta si pudiera nombrar a una persona.
+  detail?: string;
+};
+
+// ok: análisis leído (la lista puede estar vacía); pending: el BOE aún no lo publica; error: no se pudo leer;
+// skipped: no se consultó (tope de peticiones o errores seguidos).
+export type ChangesStatus = "ok" | "pending" | "error" | "skipped";
+
 export type OutputItem = {
   id: string;
   date: string;
@@ -43,6 +60,11 @@ export type OutputItem = {
   normType: NormType;
   // Boletín de origen: "BOE", "BOJA" o "DOG".
   bulletin: string;
+  // Solo con la opción relations y solo en la sección I del BOE.
+  changes?: Change[];
+  changesStatus?: ChangesStatus;
+  // Solo con followIds: los identificadores seguidos que este elemento cambia.
+  followed?: string[];
 };
 
 // Recuentos de lo descartado: identificador no válido, enlace no válido, filtro de nombres y texto demasiado largo.

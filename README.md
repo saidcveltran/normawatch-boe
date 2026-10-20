@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.3-1636B5?style=flat" alt="Versión 1.5.3"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.6.0-1636B5?style=flat" alt="Versión 1.6.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -21,6 +21,8 @@
 **NormaWatch** is a Spain official gazette API in the form of an Apify Actor. It lists the new general provisions (Section I) of Spain's Official State Gazette (BOE, Boletín Oficial del Estado) and, optionally, of the BOJA (Andalusia) and DOG (Galicia) regional gazettes, every day, as JSON and as a table in the Apify console. Each item carries metadata and official links only, never the full text.
 
 It suits Spanish legislation monitoring and regulatory alerts for Spain: compliance teams, law firms, journalists and developers who feed their own alerts or dashboards with a BOE API.
+
+Since 1.6, the optional `relations` and `followIds` settings tell you which laws each BOE provision repeals, amends or replaces (based on data from the Agencia Estatal Boletín Oficial del Estado; the links to consolidated texts are informational only, not official), and let you follow specific laws by their BOE id.
 
 Key options: a date range of up to one year, filters by department, title keywords and norm type, `onlyNew` for daily scheduled runs that return only what you have not received before, and optional e-mail, Telegram or Slack notices.
 
@@ -37,6 +39,7 @@ It is free: no price and no subscription. It is not an official BOE or AEBOE ser
 - [Tipo de norma (derivado)](#tipo-de-norma-derivado)
 - [Sección III (opcional)](#sección-iii-opcional)
 - [Boletines autonómicos](#boletines-autonómicos)
+- [Qué cambia cada disposición (relations)](#qué-cambia-cada-disposición-relations)
 - [Vista de tabla en la consola de Apify](#vista-de-tabla-en-la-consola-de-apify)
 - [Ejemplo de resultado](#ejemplo-de-resultado)
 - [Cómo funciona onlyNew](#cómo-funciona-onlynew)
@@ -89,6 +92,8 @@ Todos los campos son opcionales. Una entrada vacía devuelve las disposiciones d
 | `normTypes` | lista de tipos de norma | sin filtro (todos los tipos) | Selector múltiple. Valores admitidos, tal como los escribe el BOE: `Corrección de errores`, `Instrumento de ratificación`, `Real Decreto Legislativo`, `Real Decreto-ley`, `Real Decreto`, `Ley Orgánica`, `Ley Foral`, `Ley`, `Decreto Legislativo`, `Decreto-ley`, `Decreto`, `Orden`, `Resolución`, `Circular`, `Acuerdo internacional` y `Otro`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Tipo de norma](#tipo-de-norma-derivado). |
 | `sections` | lista de secciones | `["1"]` (solo la sección I) | Selector múltiple con `"1"` (disposiciones generales) y `"3"` (otras disposiciones, restringida y con filtros). Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Sección III](#sección-iii-opcional). |
 | `bulletins` | lista de boletines | `["BOE"]` | Selector múltiple con `"BOE"`, `"BOJA"` y `"DOG"`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Boletines autonómicos](#boletines-autonómicos). |
+| `relations` | verdadero o falso | `false` | Desde la 1.6. Lee, para cada disposición de la sección I del BOE, qué normas deroga, modifica, sustituye… Una petición más por disposición. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
+| `followIds` | lista de textos | sin lista | Desde la 1.6. Máximo 100 identificadores del BOE con la forma `BOE-A-AAAA-N`; se recortan, se pasan a mayúsculas y se unifican los repetidos. Activa `relations` y entrega, aunque los filtros las dejaran fuera, las disposiciones que cambian alguna de esas normas. Un valor no válido hace fallar la ejecución con código de salida 2. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
 | `onlyNew` | verdadero o falso | `false` | Ver [Cómo funciona `onlyNew`](#cómo-funciona-onlynew). |
 | `emailTo` | texto (secreto) | sin correo | Una sola dirección. En el plan gratuito de Apify debe ser la de tu propia cuenta de Apify. Se guarda cifrada. Ver [Avisos](#avisos-por-correo-telegram-y-slack). |
 | `notifyWhenEmpty` | verdadero o falso | `false` | Por defecto solo se avisa si la ejecución entrega algo; con `true` se avisa también cuando no hay novedades. |
@@ -132,6 +137,9 @@ Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivad
 | `retrievedAt` | Campo derivado: momento (ISO 8601, UTC) en que el Actor obtuvo el dato. No procede del BOE. |
 | `source` | Línea de fuente: `Fuente de los datos: Agencia Estatal Boletín Oficial del Estado`. |
 | `sourceUrl` | `https://www.boe.es`. |
+| `changes` | Desde la versión 1.6 y solo con `relations` (o `followIds`), en la sección I del BOE: lista de normas que la disposición cambia. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
+| `changesStatus` | Desde la versión 1.6 y solo con `relations`: `ok`, `pending`, `error` o `skipped`. |
+| `followed` | Desde la versión 1.6 y solo con `followIds`: los identificadores seguidos que la disposición cambia (lista vacía si ninguno). |
 | `normType` | Campo derivado (desde la versión 1.1): tipo de norma que el Actor deduce del inicio del título, por ejemplo `Real Decreto-ley` u `Orden`. No es un metadato del BOE. Vale `Otro` si no se reconoce ningún tipo. |
 
 Los enlaces solo se conservan si apuntan a `https://www.boe.es`.
@@ -211,7 +219,7 @@ Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales**
 - BOJA: una petición por fecha (hasta 200 elementos por página, como máximo 5 páginas), con la lista de campos cerrada: no se pide nunca el texto íntegro ni HTML. Un día sin boletín no es un error.
 - DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida. **El DOG sirve para ejecuciones diarias programadas, no para recuperar historial**: los días pasados devuelven siempre cero elementos. Se pide una sola vez por ejecución.
 - El DOG se pide una vez por ejecución y, si el RSS no responde (también con un 404), fallan solo los días del DOG.
-- Pausa mínima, `User-Agent` identificado (`normawatch-boe/1.5 (+https://github.com/saidcveltran/normawatch-boe)`), sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
+- Pausa mínima, `User-Agent` identificado (`normawatch-boe/1.6 (+https://github.com/saidcveltran/normawatch-boe)`), sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
 
 ### Licencias y atribución
 
@@ -221,9 +229,60 @@ Mantén la línea de fuente (`source`) de cada elemento y la licencia de su bole
 
 No se leen BOCM (Madrid), DOGC (Cataluña), DOGV (Comunitat Valenciana) ni BOA (Aragón) porque no hay un punto de acceso automático y una licencia abierta confirmados. **BOPV (País Vasco)** tampoco está en la 1.5: su API de Open Data Euskadi (`api.euskadi.eus`, licencia CC BY 4.0) existe, pero el servidor responde 404 a las peticiones con el `User-Agent` identificado de NormaWatch (probado también con la forma `Mozilla/5.0 (compatible; normawatch-boe/1.5; +…)`) y solo responde a clientes genéricos; este Actor no se hace pasar por un navegador ni por otro programa. Se retomará si Open Data Euskadi admite un cliente identificado. No se hace extracción de páginas HTML. Cada boletín puede cambiar su formato; si falla, solo falla ese boletín.
 
+## Qué cambia cada disposición (`relations`)
+
+Desde la versión 1.6, con `relations` activada, el Actor pide a `www.boe.es` el documento XML de cada disposición de la **sección I** del BOE y lee únicamente su **análisis jurídico oficial** (las referencias a normas anteriores). Cada elemento añade:
+
+- `changes`: lista de normas que la disposición deroga, modifica, sustituye, añade, desarrolla, transpone, corrige, etc. Cada entrada tiene `action` (la palabra en castellano: `deroga`, `modifica`, `sustituye`…), `code` (el código de la tabla oficial de relaciones del BOE), `targetId` (identificador de la norma afectada), `targetUrl` (solo para identificadores `BOE-A`: enlace a su texto consolidado en `www.boe.es`) y `detail` (texto breve del BOE sobre lo afectado, de hasta 300 caracteres; falta si empieza por `=`, `+`, `-` o `@` o contiene `<` o `>` (para que una hoja de cálculo o un navegador no lo tomen por fórmula o marcas; trátalo siempre como texto al mostrarlo o exportarlo), y falta si el filtro de tratamientos personales y de personas, el mismo que se aplica a los títulos, lo detecta).
+- `changesStatus`: `ok` (análisis leído; `changes` puede estar vacío), `pending` (el BOE aún no ha publicado el análisis de ese documento), `error` (no se pudo leer el documento tras los reintentos) o `skipped` (no se consultó, por el tope de peticiones o por fallos seguidos).
+
+Las relaciones débiles (`330` cita, `331` en relación con, `440` de conformidad con) no se incluyen. Las demás sí, aunque su código no tenga una palabra propia: entonces `action` es el texto oficial en minúsculas.
+
+Basado en datos de la Agencia Estatal Boletín Oficial del Estado. El enlace `targetUrl` lleva a un texto consolidado **de carácter meramente informativo**, no oficial: solo el texto publicado en el BOE tiene validez oficial. El Actor guarda únicamente estas referencias, nunca el texto íntegro de las normas.
+
+Ejemplo de entrada:
+
+```json
+{
+  "dateFrom": "2026-10-15",
+  "dateTo": "2026-10-15",
+  "relations": true,
+  "followIds": ["BOE-A-2021-3698"]
+}
+```
+
+Fragmento del elemento resultante para el Real Decreto 824/2026 (datos reales del BOE del 15 de octubre de 2026, abreviado):
+
+```json
+{
+  "id": "BOE-A-2026-21445",
+  "changes": [
+    { "action": "deroga", "code": 210, "targetId": "BOE-A-2025-5828", "targetUrl": "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5828", "detail": "la Orden PJC/281/2025, de 21 de marzo" },
+    { "action": "sustituye", "code": 245, "targetId": "BOE-A-2021-3698", "targetUrl": "https://www.boe.es/buscar/act.php?id=BOE-A-2021-3698", "detail": "los anexos II y III del Reglamento aprobado por Real Decreto 141/2021, de 9 de marzo" }
+  ],
+  "changesStatus": "ok",
+  "followed": ["BOE-A-2021-3698"]
+}
+```
+
+### Seguir normas (`followIds`)
+
+Con `followIds` el Actor marca en `followed` las disposiciones que cambian alguna de esas normas, las entrega **aunque los filtros de `departments`, `keywords` o `normTypes` las dejaran fuera** y, en los avisos, las pone primero bajo «Cambia una ley que sigues» (con una frase como «El Real Decreto 824/2026 sustituye BOE-A-2021-3698»; el resto de elementos muestra un resumen corto, por ejemplo «deroga 1, modifica 2»). Para poder hacerlo se consulta el documento de **todas** las disposiciones de la sección I de cada día, también las que los filtros descartarían, y solo se entregan las que cambian una norma seguida o cumplen los filtros. Una disposición fuera de los filtros cuyo análisis aún está `pending` o falla no se entrega. Si el tope o los fallos seguidos impiden consultar una disposición fuera de los filtros (`skipped`), tampoco se entrega y el registro la cuenta aparte en `followCheckSkipped`.
+
+**Aviso para rangos largos:** con `followIds` y un rango de muchos días se hacen muchas peticiones (de 2 a 11 por día, a razón de una por segundo como mínimo de pausa). Hay un tope de **1000 documentos por ejecución**; a partir de él el resto queda como `skipped` y el registro lo cuenta. Para vigilar normas, lo habitual es una ejecución diaria con `onlyNew`.
+
+### Coste, límites y cuidados
+
+- Una petición más por disposición de la sección I (de 2 a 11 al día), de una en una, con la misma pausa entre peticiones (`requestDelayMs`), el mismo `User-Agent`, el mismo tiempo máximo y tope de tamaño, sin seguir redirecciones y con los mismos reintentos que el resto. La dirección se construye solo con el identificador de la disposición, nunca con una dirección que venga en una respuesta.
+- Tope de 1000 documentos por ejecución. Tras cinco fallos seguidos (ya reintentados), tras 50 fallos en total, o al llegar a 1500 peticiones HTTP (reintentos incluidos) para relaciones, no se piden más documentos en esa ejecución.
+- Un fallo de un documento nunca hace fallar la ejecución ni cambia el código de salida: el elemento se entrega con `changesStatus` `error` o `skipped`. El registro muestra solo recuentos.
+- **El análisis puede publicarse un día después.** Si el BOE aún no lo tiene, `changesStatus` vale `pending` y `changes` está vacío. Con `onlyNew` ese elemento no se vuelve a entregar, así que no se completará solo; para ese caso, lanza una ejecución de revisión sin `onlyNew` unos días después.
+- No se aplica a la sección III ni a BOJA y DOG: esos elementos no llevan estos campos.
+- Con `relations` o `followIds` la memoria de `onlyNew` y el punto de control son distintos de los de antes (por eso la primera ejecución con la opción puede repetir elementos entregados sin ella). Sin la opción, la salida, las peticiones y la memoria son los de la 1.5.3.
+
 ## Vista de tabla en la consola de Apify
 
-Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra una tabla con la vista **Resumen**: fecha, tipo de norma (derivado), departamento, título, enlace al PDF y enlace «Ver en el BOE». La vista **Todos los campos** muestra los 12 campos y `normType`, con los enlaces como enlaces. Las vistas solo cambian cómo se ve el resultado en la consola; los datos que descargas (JSON, CSV…) y la API no cambian.
+Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra una tabla con la vista **Resumen**: fecha, tipo de norma (derivado), departamento, título, enlace al PDF y enlace «Ver en el BOE». La vista **Todos los campos** muestra los campos base, `normType` y, con las opciones de relaciones, `bulletin`, `changes`, `changesStatus` y `followed`, con los enlaces como enlaces. Las vistas solo cambian cómo se ve el resultado en la consola; los datos que descargas (JSON, CSV…) y la API no cambian.
 
 ## Ejemplo de resultado
 
@@ -284,6 +343,7 @@ Detalles técnicos:
 - Un 404 se interpreta como un día sin BOE (sin elementos).
 - Las respuestas de más de 4 MiB se descartan.
 - El Actor se identifica ante el BOE con un `User-Agent` propio.
+- Con `relations` (1.6) se añade una petición por disposición de la sección I, con estos mismos límites y un tope de 1000 documentos por ejecución (ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations)).
 
 ### Historial largo (hasta un año)
 
@@ -364,7 +424,7 @@ Si reutilizas estos datos, mantén estas condiciones de la reutilización de la 
 - No desnaturalices el sentido de la información: mantén sin alterar fechas, títulos y enlaces.
 - No presentes el resultado como un texto oficial.
 - Si modificas la información, hazlo de forma que se distinga qué elementos no proceden del original.
-- Indica como derivado cualquier campo que añadas tú. En este Actor, `retrievedAt` y `normType` son derivados.
+- Indica como derivado cualquier campo que añadas tú. En este Actor, `retrievedAt` y `normType` son derivados; con `relations`, también `action` (la palabra en castellano que el Actor da a cada código de relación), `changesStatus` y `followed`. Las referencias de `changes` proceden del análisis jurídico del BOE (basado en datos de la Agencia Estatal Boletín Oficial del Estado) y los enlaces `targetUrl` llevan a textos consolidados de carácter meramente informativo.
 - No sugieras que el BOE o la Agencia respaldan tu producto o tu uso de los datos.
 
 Estas condiciones resumen el aviso legal del BOE, cuyo texto es la fuente de referencia: <https://www.boe.es/informacion/aviso_legal/index.php>.

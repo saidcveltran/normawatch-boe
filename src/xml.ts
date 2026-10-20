@@ -1,14 +1,18 @@
 // Lector mínimo de XML/RSS, sin dependencias y sin expresiones regulares sobre el documento: recorre el texto con
 // indexOf, con topes de tamaño, de profundidad y de nodos. No admite DTD ni declaraciones de entidad (se rechaza
 // cualquier <!DOCTYPE o <!ENTITY) y solo expande las cinco entidades predefinidas y las referencias numéricas.
-// Los atributos se ignoran: solo importan los elementos y su texto.
+// Los atributos solo se leen con { attributes: true } (opción relations); por defecto se ignoran y solo importan los elementos y su texto.
 import { BoeError } from "./errors.ts";
 
 export const XML_MAX_BYTES = 1024 * 1024;
 export const XML_MAX_DEPTH = 16;
 export const XML_MAX_NODES = 20_000;
 
-export type XmlNode = { name: string; text: string; children: XmlNode[] };
+export type XmlNode = { name: string; text: string; children: XmlNode[]; attrs?: Record<string, string> };
+
+// Atributos de un elemento: solo se leen si el llamador lo pide (attributes: true); por defecto se ignoran, como siempre.
+export const XML_MAX_ATTRS = 32;
+export type ParseOptions = { attributes?: boolean };
 
 const fail = (reason: string): never => {
   throw new BoeError(`XML no válido: ${reason}`);
@@ -90,7 +94,38 @@ function tagEnd(xml: string, from: number): number {
   return -1;
 }
 
-export function parseXml(input: string): XmlNode {
+// Lee name="valor" o name='valor' desde la posición dada. Lo mal formado se deja de leer sin fallar; el valor se expande con
+// las mismas reglas que el texto y, si no se puede, el atributo se omite. Sin prototipo, para que un nombre como __proto__ sea inofensivo.
+function readAttrs(body: string, from: number): Record<string, string> {
+  const out: Record<string, string> = Object.create(null) as Record<string, string>;
+  let i = from;
+  let count = 0;
+  while (i < body.length && count < XML_MAX_ATTRS) {
+    while (i < body.length && isSpace(body[i]!)) i++;
+    const nameStart = i;
+    while (i < body.length && !isSpace(body[i]!) && body[i] !== "=") i++;
+    const name = body.slice(nameStart, i);
+    while (i < body.length && isSpace(body[i]!)) i++;
+    if (name === "" || body[i] !== "=") break;
+    i++;
+    while (i < body.length && isSpace(body[i]!)) i++;
+    const quote = body[i];
+    if (quote !== '"' && quote !== "'") break;
+    const close = body.indexOf(quote, i + 1);
+    if (close === -1) break;
+    const raw = body.slice(i + 1, close);
+    i = close + 1;
+    count++;
+    try {
+      out[name] = decode(raw);
+    } catch {
+      // Atributo con una entidad no admitida: se omite.
+    }
+  }
+  return out;
+}
+
+export function parseXml(input: string, options: ParseOptions = {}): XmlNode {
   if (typeof input !== "string" || Buffer.byteLength(input, "utf8") > XML_MAX_BYTES) return fail("documento demasiado grande");
   const xml = input.charCodeAt(0) === 0xfeff ? input.slice(1) : input;
   checkChars(xml);
@@ -148,6 +183,7 @@ export function parseXml(input: string): XmlNode {
       if (++nodes > XML_MAX_NODES) return fail("demasiados elementos");
       if (stack.length === 0 && root !== undefined) return fail("más de un elemento raíz");
       const node: XmlNode = { name, text: "", children: [] };
+      if (options.attributes === true) node.attrs = readAttrs(body, n);
       const parent = stack[stack.length - 1];
       if (parent !== undefined) parent.children.push(node);
       else root = node;

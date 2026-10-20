@@ -5,6 +5,7 @@ import { parseNotifyInput } from "./input.ts";
 import { createNotifier } from "./notify.ts";
 import type { NotifyDeps } from "./notify.ts";
 import type { OutputItem } from "./parse.ts";
+import { fetchRelationsDocument } from "./relations.ts";
 import { SEEN_STORE_NAME, SeenStore, seenKey } from "./seen.ts";
 
 const STATE_KEY = "STATE";
@@ -79,6 +80,7 @@ try {
     },
     // memo: el DOG sirve siempre el mismo RSS, que se pide una sola vez por ejecución.
     fetchDay: (date, bulletin) => adapterFor(bulletin !== undefined && isBulletin(bulletin) ? bulletin : "BOE").fetchDay(date, { requestDelayMs: input.requestDelayMs, memo }),
+    fetchRelations: (id) => fetchRelationsDocument(id, { requestDelayMs: input.requestDelayMs }),
     push: (items) => Actor.pushData(items),
     sleep,
     now: () => new Date().toISOString(),

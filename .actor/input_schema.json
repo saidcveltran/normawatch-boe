@@ -105,6 +105,19 @@
         "enumTitles": ["BOE (Estado)", "BOJA (Andalucía)", "DOG (Galicia)"]
       }
     },
+    "relations": {
+      "title": "Qué cambia cada disposición (BOE)",
+      "type": "boolean",
+      "description": "Si está activado, para cada disposición de la sección I del BOE se pide su documento y se lee el análisis jurídico oficial: cada elemento añade changes (qué normas deroga, modifica, sustituye, añade, desarrolla, transpone o corrige, con el identificador y un enlace al texto consolidado de la norma afectada, que es de carácter meramente informativo y no oficial) y changesStatus. Basado en datos de la Agencia Estatal Boletín Oficial del Estado. Cuesta una petición más por disposición (hasta 1000 por ejecución). El BOE a veces publica el análisis un día después: entonces changesStatus vale pending. No se aplica a la sección III ni a los boletines autonómicos. Con esta opción la memoria de onlyNew es distinta de la de antes.",
+      "default": false
+    },
+    "followIds": {
+      "title": "Normas que sigues (identificadores del BOE)",
+      "type": "array",
+      "description": "Identificadores de normas del BOE (BOE-A-AAAA-N, por ejemplo BOE-A-2021-3698). Activa la opción de relaciones y marca en followed las disposiciones que cambian alguna de ellas; esas disposiciones se entregan y se avisan primero, aunque los filtros de departamentos, palabras clave o tipos de norma las dejaran fuera. Se consulta el documento de todas las disposiciones de la sección I de cada día, así que con un rango largo hay más peticiones (hasta 1000 por ejecución; a partir de ahí se deja de consultar). Máximo 100 entradas. Con esta opción la memoria de onlyNew es distinta de la de antes.",
+      "editor": "stringList",
+      "maxItems": 100
+    },
     "onlyNew": {
       "title": "Solo elementos nuevos",
       "type": "boolean",

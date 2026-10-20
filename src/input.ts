@@ -19,6 +19,9 @@ export const MIN_DELAY_MS = 500;
 export const MAX_DELAY_MS = 10_000;
 export const MAX_LIST_ENTRIES = 50;
 export const MAX_ENTRY_CHARS = 200;
+export const MAX_FOLLOW_IDS = 100;
+// Identificador de una norma del BOE que se puede seguir (el mismo de la sección I): BOE-A-AAAA-N.
+const FOLLOW_ID = /^BOE-A-\d{4}-\d{1,7}$/;
 
 export type RunInput = {
   dates: string[];
@@ -35,6 +38,10 @@ export type RunInput = {
   sections?: string[];
   // Boletines que se leen, en orden canónico; solo aparece cuando no es el BOE solo.
   bulletins?: string[];
+  // Opción relations (1.6): solo aparece cuando vale verdadero (también si hay followIds, que la activan).
+  relations?: true;
+  // Identificadores BOE-A seguidos, en mayúsculas, sin repetidos y ordenados; solo aparece cuando hay alguno.
+  followIds?: string[];
 };
 
 export type NormalizedInput = {
@@ -48,6 +55,8 @@ export type NormalizedInput = {
   normTypes: string[];
   sections: string[];
   bulletins: string[];
+  relations: boolean;
+  followIds: string[];
 };
 
 export type Filters = { departments?: string[]; keywords?: string[]; normTypes?: string[] };
@@ -163,6 +172,25 @@ function bulletinsField(input: Record<string, unknown>): string[] {
   return chosen.size === 0 ? ["BOE"] : BULLETINS.filter((b) => chosen.has(b));
 }
 
+// Normas que se siguen: identificadores BOE-A-AAAA-N. Se recortan, se pasan a mayúsculas y se unifican los repetidos;
+// las entradas en blanco se ignoran. Cualquier otra forma, o más de 100 entradas, es una entrada incorrecta.
+// El mensaje no repite el valor recibido.
+function followIdsField(input: Record<string, unknown>): string[] {
+  const v = input["followIds"];
+  if (v === undefined || v === null) return [];
+  if (!Array.isArray(v)) throw new BoeError("followIds debe ser una lista de identificadores del BOE");
+  if (v.length > MAX_FOLLOW_IDS) throw new BoeError(`followIds admite como máximo ${MAX_FOLLOW_IDS} entradas`);
+  const out = new Set<string>();
+  for (const entry of v) {
+    if (typeof entry !== "string") throw new BoeError("followIds solo admite textos");
+    const id = entry.trim().toUpperCase();
+    if (id === "") continue;
+    if (!FOLLOW_ID.test(id)) throw new BoeError("followIds contiene un identificador no válido (la forma es BOE-A-AAAA-N, por ejemplo BOE-A-2021-3698)");
+    out.add(id);
+  }
+  return [...out].sort();
+}
+
 // Aplica los valores por defecto y comprueba todos los límites.
 export function normalizeInput(input: Record<string, unknown>, today: string): NormalizedInput {
   const dateFrom = dateField(input, "dateFrom") ?? today;
@@ -184,6 +212,8 @@ export function normalizeInput(input: Record<string, unknown>, today: string): N
     normTypes: normTypesField(input),
     sections: sectionsField(input),
     bulletins: bulletinsField(input),
+    relations: boolField(input, "relations"),
+    followIds: followIdsField(input),
   };
 }
 
@@ -204,6 +234,9 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
     ...(n.normTypes.length > 0 ? { normTypes: n.normTypes } : {}),
     ...(n.sections.length === 1 && n.sections[0] === "1" ? {} : { sections: n.sections }),
     ...(n.bulletins.length === 1 && n.bulletins[0] === "BOE" ? {} : { bulletins: n.bulletins }),
+    // Seguir normas implica leer las relaciones.
+    ...(n.relations || n.followIds.length > 0 ? { relations: true as const } : {}),
+    ...(n.followIds.length > 0 ? { followIds: n.followIds } : {}),
   };
 }
 

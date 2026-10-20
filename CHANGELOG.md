@@ -6,6 +6,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.6.0] - 2026-10-20
+
+### Añadido
+
+- Opción `relations` (por defecto desactivada): para cada disposición de la sección I del BOE se lee el análisis jurídico oficial de su documento y cada elemento incorpora `changes` (qué normas deroga, modifica, sustituye, añade, desarrolla, transpone o corrige: acción, código, identificador de la norma afectada, enlace a su texto consolidado y un texto breve de lo afectado) y `changesStatus` (`ok`, `pending`, `error` o `skipped`). Las relaciones débiles (cita, en relación con, de conformidad con) no se incluyen. Cuesta una petición más por disposición, con un tope de 1000 documentos por ejecución; un fallo de un documento no hace fallar la ejecución.
+- Opción `followIds` (lista de identificadores `BOE-A-AAAA-N`, como máximo 100): activa `relations` y marca en `followed` las disposiciones que cambian alguna de esas normas. Con `followIds`, esas disposiciones se entregan aunque los filtros de departamentos, palabras clave o tipos de norma las dejaran fuera.
+- Los avisos (correo, Telegram y Slack) ponen primero, bajo «Cambia una ley que sigues», las disposiciones que cambian una norma seguida, y el asunto del correo indica cuántas son. El resto muestra un breve resumen de sus cambios.
+- Campos `changes`, `changesStatus` y `followed` en el esquema del conjunto de datos (vista «Todos los campos»).
+
+### Cambiado
+
+- El `User-Agent` pasa a `normawatch-boe/1.6`.
+- Sin `relations` ni `followIds`, la salida, las peticiones, la huella de reanudación y la memoria de `onlyNew` son idénticas a las de la 1.5.3.
+
 ## [1.5.3] - 2026-10-20
 
 ### Corregido

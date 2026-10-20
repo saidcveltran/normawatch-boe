@@ -12,10 +12,12 @@ const MAX_RATE_LIMITED_DAYS = 2;
 export const MAX_CONSECUTIVE_FAILED_DAYS = 5;
 import type { FetchOptions, FetchResult } from "./http.ts";
 import { dropMessages } from "./parse.ts";
-import type { OutputItem } from "./parse.ts";
+import type { Change, ChangesStatus, OutputItem } from "./parse.ts";
 import { madridToday, matchesFilters, parseInput } from "./input.ts";
 import type { RunInput } from "./input.ts";
 import type { Notifier } from "./notify.ts";
+import { DOCUMENT_ID, MAX_CONSECUTIVE_RELATION_ERRORS, MAX_RELATION_HTTP_ATTEMPTS, MAX_RELATION_REQUESTS, MAX_TOTAL_RELATION_ERRORS, followedBy, parseRelations } from "./relations.ts";
+import type { RelationsFetch } from "./relations.ts";
 import { adapterFor } from "./sources/index.ts";
 import type { Bulletin } from "./sources/index.ts";
 
@@ -37,6 +39,8 @@ async function guardSource<T>(multi: boolean, f: () => Promise<T>): Promise<T> {
 export type RunDeps = {
   // El segundo argumento solo se pasa cuando la entrada elige boletines distintos del BOE solo.
   fetchDay: (date: string, bulletin?: string) => Promise<FetchResult>;
+  // Documento XML de un elemento del BOE por su identificador (opción relations). Nunca lanza: un fallo es status "error".
+  fetchRelations?: (id: string) => Promise<RelationsFetch>;
   push: (items: OutputItem[]) => Promise<void>;
   sleep: (ms: number) => Promise<void>;
   now: () => string;
@@ -100,6 +104,9 @@ export function inputFingerprint(input: RunInput): string {
     normTypes: input.normTypes ?? [],
     ...(input.sections !== undefined ? { sections: input.sections } : {}),
     ...(input.bulletins !== undefined ? { bulletins: input.bulletins } : {}),
+    // Las relaciones y las normas seguidas (1.6) entran solo cuando se usan; followIds ya llega ordenado.
+    ...(input.relations === true ? { relations: true } : {}),
+    ...(input.followIds !== undefined && input.followIds.length > 0 ? { followIds: input.followIds } : {}),
   });
   return createHash("sha256").update(canonical).digest("hex");
 }
@@ -282,6 +289,62 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
       deps.log.error("No se pudo guardar STATE: la ejecución sigue, pero no podrá reanudarse", { name: errName(err) });
     }
   };
+  // Opción relations: recuentos de la ejecución (el tope de documentos y los fallos seguidos se cuentan por ejecución).
+  const follow = input.followIds ?? [];
+  const rel = { fetched: 0, ok: 0, pending: 0, error: 0, skipped: 0, consecutiveErrors: 0, bypassed: 0, attempts: 0, totalErrors: 0, followCheckSkipped: 0 };
+  const withRelations = (it: OutputItem, status: ChangesStatus, changes: Change[]): OutputItem => ({
+    ...it,
+    changes,
+    changesStatus: status,
+    ...(follow.length > 0 ? { followed: followedBy(changes, follow) } : {}),
+  });
+  // Solo los elementos de la sección I del BOE tienen relaciones.
+  const hasRelations = (it: OutputItem): boolean => input.relations === true && it.bulletin === "BOE" && it.section === "1";
+  const enrich = async (it: OutputItem): Promise<OutputItem> => {
+    const fetchRelations = deps.fetchRelations;
+    // Un identificador que no es de un documento del BOE no se pide ni cuenta para el corte ni para el tope de fallos.
+    if (!DOCUMENT_ID.test(it.id)) {
+      rel.error++;
+      return withRelations(it, "error", []);
+    }
+    if (
+      rel.fetched >= MAX_RELATION_REQUESTS ||
+      rel.attempts >= MAX_RELATION_HTTP_ATTEMPTS ||
+      rel.totalErrors >= MAX_TOTAL_RELATION_ERRORS ||
+      rel.consecutiveErrors >= MAX_CONSECUTIVE_RELATION_ERRORS
+    ) {
+      rel.skipped++;
+      return withRelations(it, "skipped", []);
+    }
+    if (fetchRelations === undefined) {
+      rel.error++;
+      return withRelations(it, "error", []);
+    }
+    rel.fetched++;
+    await deps.sleep(input.requestDelayMs);
+    let res: RelationsFetch;
+    try {
+      res = await fetchRelations(it.id);
+    } catch {
+      res = { status: "error", requests: 0 };
+    }
+    summary.requests += res.requests;
+    rel.attempts += res.requests;
+    if (res.status === "ok") {
+      try {
+        const parsedDoc = parseRelations(res.body);
+        rel.consecutiveErrors = 0;
+        rel[parsedDoc.status]++;
+        return withRelations(it, parsedDoc.status, parsedDoc.changes);
+      } catch {
+        // Documento mal formado: cuenta como fallo de ese elemento.
+      }
+    }
+    rel.error++;
+    rel.consecutiveErrors++;
+    rel.totalErrors++;
+    return withRelations(it, "error", []);
+  };
   let executed = false;
   for (let t = start; t < total && summary.stored < input.maxItems; t++) {
     const date = input.dates[Math.floor(t / B)]!;
@@ -304,7 +367,17 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
       }
       const parsed = await guardSource(multi, async () => adapterFor(bulletin).parseDay(result.body, date, deps.now(), input.sections));
       const { dropped } = parsed;
-      const matching = parsed.items.filter((it) => matchesFilters(it, input));
+      // Con followIds, todos los elementos de la sección I del BOE se consultan aunque los filtros los dejen fuera: solo
+      // se entregan si cambian una norma seguida. Sin followIds el filtrado es el de siempre.
+      const bypass = new Set<OutputItem>();
+      const matching = parsed.items.filter((it) => {
+        if (matchesFilters(it, input)) return true;
+        if (follow.length > 0 && hasRelations(it)) {
+          bypass.add(it);
+          return true;
+        }
+        return false;
+      });
       const candidates: OutputItem[] = [];
       const inDay = new Set<string>();
       for (const it of matching) {
@@ -312,7 +385,23 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
         inDay.add(it.id);
         candidates.push(it);
       }
-      const room = candidates.slice(0, input.maxItems - summary.stored);
+      let room: OutputItem[];
+      if (input.relations === true) {
+        room = [];
+        const capacity = input.maxItems - summary.stored;
+        for (const it of candidates) {
+          if (room.length >= capacity) break;
+          const out = hasRelations(it) ? await enrich(it) : it;
+          if (bypass.has(it) && out.changesStatus === "skipped") rel.followCheckSkipped++;
+          if (bypass.has(it) && (out.followed ?? []).length === 0) {
+            rel.bypassed++;
+            continue;
+          }
+          room.push(out);
+        }
+      } else {
+        room = candidates.slice(0, input.maxItems - summary.stored);
+      }
       if (room.length > 0) {
         await deps.push(room);
         for (const it of room) delivered.add(it.id);
@@ -394,6 +483,20 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
     }
   }
   if (summary.stored >= input.maxItems) deps.log.info("Alcanzado maxItems", { maxItems: input.maxItems });
+  if (input.relations === true) {
+    if (rel.skipped > 0) {
+      deps.log.info("Relaciones: se omitió la consulta de algunos elementos por el tope de peticiones o por fallos seguidos", {
+        skipped: rel.skipped,
+        maxRequests: MAX_RELATION_REQUESTS,
+      });
+    }
+    if (rel.followCheckSkipped > 0) {
+      deps.log.info("followIds: no se pudo comprobar si algunas disposiciones fuera de los filtros cambian normas seguidas (tope o fallos seguidos)", {
+        followCheckSkipped: rel.followCheckSkipped,
+      });
+    }
+    deps.log.info("Relaciones entre normas", { fetched: rel.fetched, ok: rel.ok, pending: rel.pending, error: rel.error, skipped: rel.skipped });
+  }
   deps.log.info("Ejecución terminada", {
     days: input.dates.length,
     requests: summary.requests,

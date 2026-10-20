@@ -9,7 +9,15 @@ export const SEEN_STORE_NAME = "SEEN";
 // El filtro de tipos de norma entra en la clave solo cuando tiene valores, para que quien no lo use
 // conserve la memoria que ya tenía. Lo mismo vale para las secciones: solo entran en la clave cuando no son
 // la sección I sola, de modo que activar la sección III no mezcla su memoria con la de antes.
-export function seenKey(filters: { departments?: string[]; keywords?: string[]; normTypes?: string[]; sections?: string[]; bulletins?: string[] }): string {
+export function seenKey(filters: {
+  departments?: string[];
+  keywords?: string[];
+  normTypes?: string[];
+  sections?: string[];
+  bulletins?: string[];
+  relations?: boolean;
+  followIds?: string[];
+}): string {
   const norm = (list: string[] | undefined): string[] =>
     [...new Set((list ?? []).map((s) => s.trim().toLowerCase()))].sort();
   const types = norm(filters.normTypes);
@@ -17,12 +25,17 @@ export function seenKey(filters: { departments?: string[]; keywords?: string[]; 
   const bulletins = [...new Set((filters.bulletins ?? []).map((s) => s.trim().toUpperCase()))].sort();
   const onlyBoe = bulletins.length === 0 || (bulletins.length === 1 && bulletins[0] === "BOE");
   const onlyFirst = sections.length === 0 || (sections.length === 1 && sections[0] === "1");
+  const follow = [...new Set((filters.followIds ?? []).map((s) => s.trim().toUpperCase()))].sort();
+  const relations = filters.relations === true || follow.length > 0;
   const canonical = JSON.stringify({
     departments: norm(filters.departments),
     keywords: norm(filters.keywords),
     ...(types.length > 0 ? { normTypes: types } : {}),
     ...(onlyFirst ? {} : { sections }),
     ...(onlyBoe ? {} : { bulletins }),
+    // Las relaciones (1.6) y las normas seguidas entran solo cuando se usan: quien no las use conserva su memoria.
+    ...(relations ? { relations: true } : {}),
+    ...(follow.length > 0 ? { followIds: follow } : {}),
   });
   return `ids-${createHash("sha256").update(canonical).digest("hex").slice(0, 16)}`;
 }

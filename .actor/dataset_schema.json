@@ -72,6 +72,22 @@
         "type": "string",
         "title": "Boletín",
         "description": "Boletín de origen: \"BOE\", \"BOJA\" o \"DOG\". Campo añadido en la versión 1.5."
+      },
+      "changes": {
+        "type": "array",
+        "title": "Cambios",
+        "description": "Solo con la opción relations y solo en la sección I del BOE: normas que esta disposición deroga, modifica, sustituye, añade, desarrolla, transpone o corrige. Cada entrada tiene action, code, targetId, targetUrl (texto consolidado de carácter meramente informativo, no oficial) y detail (texto breve del BOE sobre lo afectado, si lo hay). Basado en datos de la Agencia Estatal Boletín Oficial del Estado."
+      },
+      "changesStatus": {
+        "type": "string",
+        "title": "Estado de los cambios",
+        "description": "Solo con la opción relations: \"ok\" (análisis leído; changes puede estar vacío), \"pending\" (el BOE aún no publica el análisis), \"error\" (no se pudo leer el documento) o \"skipped\" (no se consultó por el tope de peticiones o por fallos seguidos)."
+      },
+      "followed": {
+        "type": "array",
+        "title": "Normas seguidas que cambia",
+        "description": "Solo con la opción followIds: identificadores de followIds que esta disposición cambia. Vacío si no cambia ninguna.",
+        "items": { "type": "string" }
       }
     },
     "additionalProperties": true
@@ -143,7 +159,10 @@
           "urlXml",
           "retrievedAt",
           "source",
-          "sourceUrl"
+          "sourceUrl",
+          "changes",
+          "changesStatus",
+          "followed"
         ]
       },
       "display": {
@@ -204,6 +223,18 @@
           "sourceUrl": {
             "label": "Dirección de la fuente",
             "format": "link"
+          },
+          "changes": {
+            "label": "Cambios",
+            "format": "array"
+          },
+          "changesStatus": {
+            "label": "Estado de los cambios",
+            "format": "text"
+          },
+          "followed": {
+            "label": "Normas seguidas",
+            "format": "array"
           }
         }
       }
