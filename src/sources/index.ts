@@ -2,6 +2,7 @@
 import { boe } from "./boe.ts";
 import { boja } from "./boja.ts";
 import { dog } from "./dog.ts";
+import { dogc } from "./dogc.ts";
 import type { Bulletin } from "./ids.ts";
 import type { SourceAdapter } from "./types.ts";
 
@@ -9,7 +10,7 @@ export { BULLETINS, isBulletin } from "./ids.ts";
 export type { Bulletin } from "./ids.ts";
 export type { SourceAdapter } from "./types.ts";
 
-const ADAPTERS: Record<Bulletin, SourceAdapter> = { BOE: boe, BOJA: boja, DOG: dog };
+const ADAPTERS: Record<Bulletin, SourceAdapter> = { BOE: boe, BOJA: boja, DOG: dog, DOGC: dogc };
 
 export function adapterFor(bulletin: Bulletin): SourceAdapter {
   return ADAPTERS[bulletin];

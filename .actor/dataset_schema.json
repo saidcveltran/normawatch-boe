@@ -6,7 +6,7 @@
       "id": {
         "type": "string",
         "title": "Identificador",
-        "description": "Identificador del elemento según su boletín: BOE-A-AAAA-N (BOE), disposition.AAAA.N.N (BOJA) o DOG-código (DOG)."
+        "description": "Identificador del elemento según su boletín: BOE-A-AAAA-N (BOE), disposition.AAAA.N.N (BOJA), DOG-código (DOG) o DOGC-número (DOGC)."
       },
       "date": {
         "type": "string",
@@ -71,7 +71,7 @@
       "bulletin": {
         "type": "string",
         "title": "Boletín",
-        "description": "Boletín de origen: \"BOE\", \"BOJA\" o \"DOG\". Campo añadido en la versión 1.5."
+        "description": "Boletín de origen: \"BOE\", \"BOJA\", \"DOG\" o \"DOGC\" (Cataluña, desde la versión 1.8). Campo añadido en la versión 1.5."
       },
       "stage": {
         "type": "string",
@@ -93,6 +93,11 @@
         "title": "Normas seguidas que cambia",
         "description": "Solo con la opción followIds: identificadores de followIds que esta disposición cambia. Vacío si no cambia ninguna.",
         "items": { "type": "string" }
+      },
+      "sourceUpdated": {
+        "type": "string",
+        "title": "Fuente actualizada el",
+        "description": "Solo en el DOGC: fecha (AAAA-MM-DD, hora de Madrid) de la última actualización del conjunto de datos de la Generalitat de Catalunya. Falta si no se pudo leer. Campo añadido en la versión 1.8."
       }
     },
     "additionalProperties": true
@@ -168,7 +173,8 @@
           "stage",
           "changes",
           "changesStatus",
-          "followed"
+          "followed",
+          "sourceUpdated"
         ]
       },
       "display": {
@@ -245,6 +251,10 @@
           "followed": {
             "label": "Normas seguidas",
             "format": "array"
+          },
+          "sourceUpdated": {
+            "label": "Fuente actualizada el",
+            "format": "text"
           }
         }
       }

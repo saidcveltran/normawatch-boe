@@ -6,6 +6,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.8.0] - 2026-10-20
+
+### Añadido
+
+- Nuevo boletín `"DOGC"` (Cataluña) en la opción `bulletins`: las leyes, decretos-ley, decretos, decretos legislativos y órdenes del Diari Oficial de la Generalitat de Catalunya, leídos del conjunto de datos abiertos «Normativa del DOGC i del Portal Jurídic de Catalunya», el mismo día de su publicación y con historial (una petición por día, con paginación si un día supera 500 elementos). No incluye resoluciones ni anuncios, y el conjunto de datos no publica departamento: `department` queda vacío y el filtro `departments` no encuentra elementos del DOGC (`keywords` y `normTypes` sí funcionan).
+- Identificador `DOGC-número`, `section` `"1"`, título en castellano (en catalán si falta), `normType` tomado del rango de la norma y enlaces `urlHtml`, `urlPdf` y `urlXml` al Portal Jurídic de Catalunya, solo si son `https` de `portaljuridic.gencat.cat`.
+- Atribución y licencia (Llicència oberta d'ús d'informació - Catalunya): `source` y `sourceUrl` de cada elemento, el campo nuevo `sourceUpdated` (fecha de la última actualización del conjunto de datos, leída con una petición de metadatos por ejecución; si falla, se omite) y, en el pie de los resúmenes por correo, Telegram y Slack, la atribución, la dirección de la licencia, esa fecha y que la Generalitat de Catalunya no participa en NormaWatch ni lo respalda.
+- Campo `sourceUpdated` en el esquema del conjunto de datos (vista «Todos los campos») y opción «DOGC (Cataluña)» en el formulario de entrada.
+
+### Cambiado
+
+- El `User-Agent` pasa a `normawatch-boe/1.8`.
+- Sin `"DOGC"` en `bulletins`, la salida, las peticiones, la huella de reanudación y la memoria de `onlyNew` son idénticas a las de la 1.7.0. `relations` y la sección II-B no se aplican al DOGC.
+
 ## [1.7.0] - 2026-10-20
 
 ### Añadido

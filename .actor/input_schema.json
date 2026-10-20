@@ -101,14 +101,14 @@
     "bulletins": {
       "title": "Boletines",
       "type": "array",
-      "description": "Por defecto solo se lee el BOE. Puedes añadir los boletines autonómicos BOJA (Andalucía) y DOG (Galicia); de cada uno se leen únicamente las disposiciones generales. Cada elemento lleva su boletín en el campo bulletin, y la atribución y la licencia de cada fuente van en los campos source y sourceUrl (el DOG es CC BY-SA 4.0: léase la sección «Boletines autonómicos» del README). La opción sections (sección III) se aplica solo al BOE. El DOG solo publica en su RSS el último número con disposiciones generales, así que no sirve para recuperar días pasados. Con boletines distintos del BOE solo, la memoria de onlyNew es distinta de la de antes. Si un boletín falla, solo fallan sus días; la ejecución termina con error únicamente si fallan todos los elegidos.",
+      "description": "Por defecto solo se lee el BOE. Puedes añadir los boletines autonómicos BOJA (Andalucía), DOG (Galicia) y DOGC (Cataluña); de cada uno se leen únicamente las disposiciones generales. El DOGC solo incluye leyes, decretos-ley, decretos, decretos legislativos y órdenes (no resoluciones), sin retraso y con historial; su conjunto de datos no tiene departamento, así que el filtro departments no encuentra elementos del DOGC (keywords y normTypes sí). Cada elemento lleva su boletín en el campo bulletin, y la atribución y la licencia de cada fuente van en los campos source y sourceUrl (el DOG es CC BY-SA 4.0 y el DOGC tiene la licencia abierta de la Generalitat: léase la sección «Boletines autonómicos» del README). La opción sections (sección III) se aplica solo al BOE. El DOG solo publica en su RSS el último número con disposiciones generales, así que no sirve para recuperar días pasados. Con boletines distintos del BOE solo, la memoria de onlyNew es distinta de la de antes. Si un boletín falla, solo fallan sus días; la ejecución termina con error únicamente si fallan todos los elegidos.",
       "editor": "select",
       "default": ["BOE"],
-      "maxItems": 3,
+      "maxItems": 4,
       "items": {
         "type": "string",
-        "enum": ["BOE", "BOJA", "DOG"],
-        "enumTitles": ["BOE (Estado)", "BOJA (Andalucía)", "DOG (Galicia)"]
+        "enum": ["BOE", "BOJA", "DOG", "DOGC"],
+        "enumTitles": ["BOE (Estado)", "BOJA (Andalucía)", "DOG (Galicia)", "DOGC (Cataluña)"]
       }
     },
     "relations": {

@@ -157,7 +157,10 @@ export function parseSumario(
             const rawTitle = entry["titulo"];
             // En la II-B el nombre de un municipio («Ayuntamiento de Puebla de Don Fadrique (Granada)») no es un tratamiento.
             const guarded = typeof rawTitle === "string" && code === "2B" ? withoutMunicipality(rawTitle) : rawTitle;
-            if (typeof guarded === "string" && nameGuardHit(guarded)) {
+            // También sobre el título ya sin caracteres de control («D\u0000on» se guarda como «Don»).
+            const cleanedTitle = text(rawTitle);
+            const guardedClean = code === "2B" ? withoutMunicipality(cleanedTitle) : cleanedTitle;
+            if ((typeof guarded === "string" && nameGuardHit(guarded)) || (typeof rawTitle === "string" && nameGuardHit(guardedClean))) {
               dropped.nameGuard++;
               continue;
             }

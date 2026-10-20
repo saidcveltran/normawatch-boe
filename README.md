@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.7.0-1636B5?style=flat" alt="Versión 1.7.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.8.0-1636B5?style=flat" alt="Versión 1.8.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -14,13 +14,15 @@
 
 **NormaWatch** es un **Actor de Apify** (así llama Apify a los programas que se ejecutan en su plataforma) que lista las nuevas **disposiciones generales** (sección I) del Boletín Oficial del Estado (BOE), solo con metadatos y enlaces, para que puedas vigilar la normativa nueva sin leer el sumario cada día. Está pensado para quien sigue la normativa española: asesorías, despachos, equipos de cumplimiento normativo y periodistas. Es **gratuito**: no tiene precio ni suscripción.
 
-> Basado en datos de la [Agencia Estatal Boletín Oficial del Estado](https://www.boe.es) y, si lo eliges, de la Junta de Andalucía (BOJA, CC BY 4.0) y la Xunta de Galicia (DOG, CC BY-SA 4.0; ver [Boletines autonómicos](#boletines-autonómicos)). Este Actor no es un servicio oficial del BOE ni de la AEBOE, y su resultado no es un texto oficial. La Agencia no participa en este Actor, ni lo patrocina, ni lo respalda. Ni la Junta de Andalucía ni la Xunta de Galicia participan en este proyecto ni lo respaldan.
+> Basado en datos de la [Agencia Estatal Boletín Oficial del Estado](https://www.boe.es) y, si lo eliges, de la Junta de Andalucía (BOJA, CC BY 4.0), la Xunta de Galicia (DOG, CC BY-SA 4.0) y la Generalitat de Catalunya (DOGC, Llicència oberta d'ús d'informació - Catalunya; ver [Boletines autonómicos](#boletines-autonómicos)). Este Actor no es un servicio oficial del BOE ni de la AEBOE, y su resultado no es un texto oficial. La Agencia no participa en este Actor, ni lo patrocina, ni lo respalda. Ni la Junta de Andalucía ni la Xunta de Galicia participan en este proyecto ni lo respaldan, y la Generalitat de Catalunya no participa en NormaWatch ni lo respalda.
 
 ## In English
 
 **NormaWatch** is a Spain official gazette API in the form of an Apify Actor. It lists the new general provisions (Section I) of Spain's Official State Gazette (BOE, Boletín Oficial del Estado) and, optionally, of the BOJA (Andalusia) and DOG (Galicia) regional gazettes, every day, as JSON and as a table in the Apify console. Each item carries metadata and official links only, never the full text.
 
 It suits Spanish legislation monitoring and regulatory alerts for Spain: compliance teams, law firms, journalists and developers who feed their own alerts or dashboards with a BOE API.
+
+Since 1.8, the optional `bulletins` setting also accepts `"DOGC"`, the Catalonia gazette (Diari Oficial de la Generalitat de Catalunya): laws, decree-laws, decrees, legislative decrees and orders only (no resolutions, and the dataset has no department field), the same day, with history supported. The data come from the open-data portal of the Generalitat de Catalunya (licence "Llicència oberta d'ús d'informació - Catalunya"), items link to the Portal Jurídic de Catalunya (not an official authentic edition), and the Generalitat does not take part in NormaWatch or endorse it.
 
 Since 1.6, the optional `relations` and `followIds` settings tell you which laws each BOE provision repeals, amends or replaces (based on data from the Agencia Estatal Boletín Oficial del Estado; the links to consolidated texts are informational only, not official), and let you follow specific laws by their BOE id.
 
@@ -95,7 +97,7 @@ Todos los campos son opcionales. Una entrada vacía devuelve las disposiciones d
 | `normTypes` | lista de tipos de norma | sin filtro (todos los tipos) | Selector múltiple. Valores admitidos, tal como los escribe el BOE: `Corrección de errores`, `Instrumento de ratificación`, `Real Decreto Legislativo`, `Real Decreto-ley`, `Real Decreto`, `Ley Orgánica`, `Ley Foral`, `Ley`, `Decreto Legislativo`, `Decreto-ley`, `Decreto`, `Orden`, `Resolución`, `Circular`, `Acuerdo internacional` y `Otro`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Tipo de norma](#tipo-de-norma-derivado). |
 | `sections` | lista de secciones | `["1"]` (solo la sección I) | Selector múltiple con `"1"` (disposiciones generales), `"2B"` (oposiciones y concursos, desde la 1.7) y `"3"` (otras disposiciones, restringida y con filtros). Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Oposiciones](#oposiciones-sección-ii-b) y [Sección III](#sección-iii-opcional). |
 | `includeProcessUpdates` | verdadero o falso | `false` | Desde la 1.7. Solo tiene efecto con la sección II-B: por defecto se entregan solo las convocatorias; con `true`, también las actualizaciones y los elementos sin fase reconocida. Ver [Oposiciones](#oposiciones-sección-ii-b). |
-| `bulletins` | lista de boletines | `["BOE"]` | Selector múltiple con `"BOE"`, `"BOJA"` y `"DOG"`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Boletines autonómicos](#boletines-autonómicos). |
+| `bulletins` | lista de boletines | `["BOE"]` | Selector múltiple con `"BOE"`, `"BOJA"`, `"DOG"` y, desde la 1.8, `"DOGC"` (Cataluña). Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Boletines autonómicos](#boletines-autonómicos). |
 | `relations` | verdadero o falso | `false` | Desde la 1.6. Lee, para cada disposición de la sección I del BOE, qué normas deroga, modifica, sustituye… Una petición más por disposición. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
 | `followIds` | lista de textos | sin lista | Desde la 1.6. Máximo 100 identificadores del BOE con la forma `BOE-A-AAAA-N`; se recortan, se pasan a mayúsculas y se unifican los repetidos. Activa `relations` y entrega, aunque los filtros las dejaran fuera, las disposiciones que cambian alguna de esas normas. Un valor no válido hace fallar la ejecución con código de salida 2. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
 | `onlyNew` | verdadero o falso | `false` | Ver [Cómo funciona `onlyNew`](#cómo-funciona-onlynew). |
@@ -130,7 +132,7 @@ Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivad
 |---|---|
 | `id` | Identificador del BOE, con la forma `BOE-A-AAAA-N`. |
 | `date` | Fecha de publicación del sumario (`AAAA-MM-DD`). |
-| `bulletin` | Desde la versión 1.5: boletín de origen, `"BOE"`, `"BOJA"` o `"DOG"`. |
+| `bulletin` | Desde la versión 1.5: boletín de origen, `"BOE"`, `"BOJA"`, `"DOG"` o (desde la 1.8) `"DOGC"`. |
 | `section` | `"1"` (sección I). Vale `"3"` solo en los elementos de la sección III, y solo si activas `sections` (ver [Sección III](#sección-iii-opcional)). |
 | `department` | Departamento que emite la disposición, tal como lo publica el BOE. |
 | `epigraph` | Epígrafe bajo el que aparece, o texto vacío si no tiene. |
@@ -145,6 +147,7 @@ Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivad
 | `changes` | Desde la versión 1.6 y solo con `relations` (o `followIds`), en la sección I del BOE: lista de normas que la disposición cambia. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
 | `changesStatus` | Desde la versión 1.6 y solo con `relations`: `ok`, `pending`, `error` o `skipped`. |
 | `followed` | Desde la versión 1.6 y solo con `followIds`: los identificadores seguidos que la disposición cambia (lista vacía si ninguno). |
+| `sourceUpdated` | Desde la versión 1.8 y solo en el DOGC: fecha (`AAAA-MM-DD`, hora de Madrid) de la última actualización del conjunto de datos de la Generalitat de Catalunya. Falta si no se pudo leer. Ver [DOGC (Cataluña)](#dogc-cataluña). |
 | `normType` | Campo derivado (desde la versión 1.1): tipo de norma que el Actor deduce del inicio del título, por ejemplo `Real Decreto-ley` u `Orden`. No es un metadato del BOE. Vale `Otro` si no se reconoce ningún tipo. |
 
 Los enlaces solo se conservan si apuntan a `https://www.boe.es`.
@@ -212,21 +215,33 @@ Desde la versión 1.7 puedes añadir la **sección II-B** del BOE («II. Autorid
 
 ## Boletines autonómicos
 
-Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales** de dos boletines autonómicos con el campo `bulletins`. Por defecto vale `["BOE"]` y una ejecución sin el campo devuelve lo mismo que en la 1.4, con un campo más (`bulletin: "BOE"`). Ejemplo: `"bulletins": ["BOE", "BOJA", "DOG"]`.
+Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales** de boletines autonómicos con el campo `bulletins`: el BOJA y el DOG desde la 1.5 y el DOGC (Cataluña) desde la 1.8. Por defecto vale `["BOE"]` y una ejecución sin el campo devuelve lo mismo que en la 1.4, con un campo más (`bulletin: "BOE"`). Ejemplo: `"bulletins": ["BOE", "BOJA", "DOG", "DOGC"]`.
 
 | Boletín | Fuente oficial | Licencia | Línea de fuente (`source`) |
 |---|---|---|---|
 | BOJA (Andalucía) | API de datos abiertos de la Junta de Andalucía, `datos.juntadeandalucia.es/api/v0/boja`, sección «1. Disposiciones generales» | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) («Reconocimiento 4.0 Internacional»), según el conjunto [BOJA disposiciones del año 2026](https://www.juntadeandalucia.es/datosabiertos/portal/dataset/27e79cef-d68d-4b7c-9c87-ae82309d4dcb) del portal de datos abiertos de la Junta | `Fuente: Junta de Andalucía, BOJA (CC BY 4.0)` |
 | DOG (Galicia) | RSS oficial de la sección I del Diario Oficial de Galicia, `www.xunta.gal/diario-oficial-galicia` | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.es) (conjunto «Actualidade do Diario Oficial de Galicia» de [Abertos Xunta](https://abertos.xunta.gal/catalogo/administracion-publica/-/dataset/0262/actualidade-diario-oficial-galicia)) | `Fuente: Xunta de Galicia, Diario Oficial de Galicia (CC BY-SA 4.0)` |
+| DOGC (Cataluña) | Conjunto «Normativa del DOGC i del Portal Jurídic de Catalunya» del portal de datos abiertos de la Generalitat, `analisi.transparenciacatalunya.cat` (leyes, decretos-ley, decretos, decretos legislativos y órdenes) | [Llicència oberta d'ús d'informació - Catalunya](https://web.gencat.cat/ca/generalitat/dades-indicadors/dades-obertes/llicencies) | `Fuente: Generalitat de Catalunya. Entitat Autònoma del Diari Oficial i de Publicacions de la Generalitat de Catalunya (EADOP)` |
 
 ### Qué cambia en la salida
 
-- Todos los elementos llevan `bulletin` (`"BOE"`, `"BOJA"` o `"DOG"`) y los mismos 12 campos de siempre. `source` y `sourceUrl` son los del boletín de origen; `section` es la etiqueta de su sección (`1. Disposiciones generales` en el BOJA, `I. Disposiciones generales` en el DOG).
-- **Identificadores** de cada boletín (no siguen el formato `BOE-A-` del BOE): BOE `BOE-A-AAAA-N`; BOJA `disposition.AAAA.N.N` (el identificador del propio BOJA); DOG `DOG-código`, donde el código es el nombre del anuncio en la dirección oficial (por ejemplo `DOG-AnuncioC3K1-280926-0001`).
-- `urlXml` solo lo ofrece el BOE; el BOJA ofrece `urlPdf` y el DOG ofrece `urlHtml`. Los enlaces solo se conservan si apuntan al sitio oficial del boletín.
-- `normType` se deduce del título; en el BOJA, si el título no empieza por un tipo conocido, se usa el tipo que publica el boletín. Si no se reconoce, vale `Otro`. Los filtros `departments`, `keywords` y `normTypes` funcionan igual en todos los boletines.
+- Todos los elementos llevan `bulletin` (`"BOE"`, `"BOJA"`, `"DOG"` o `"DOGC"`) y los mismos 12 campos de siempre. `source` y `sourceUrl` son los del boletín de origen; `section` es la etiqueta de su sección (`1. Disposiciones generales` en el BOJA, `I. Disposiciones generales` en el DOG, `1` en el DOGC).
+- **Identificadores** de cada boletín (no siguen el formato `BOE-A-` del BOE): BOE `BOE-A-AAAA-N`; BOJA `disposition.AAAA.N.N` (el identificador del propio BOJA); DOG `DOG-código`, donde el código es el nombre del anuncio en la dirección oficial (por ejemplo `DOG-AnuncioC3K1-280926-0001`); DOGC `DOGC-número` (el número de control del conjunto de datos, por ejemplo `DOGC-26289051`).
+- `urlXml` lo ofrece el BOE y el DOGC; el BOJA ofrece `urlPdf` y el DOG ofrece `urlHtml`. Los enlaces solo se conservan si apuntan al sitio oficial del boletín.
+- `normType` se deduce del título; en el BOJA, si el título no empieza por un tipo conocido, se usa el tipo que publica el boletín; en el DOGC, al revés, se usa el rango de la norma que publica el boletín y solo si falta se deduce del título. Si no se reconoce, vale `Otro`. Los filtros `departments`, `keywords` y `normTypes` funcionan igual en todos los boletines.
 - La opción `sections` (sección III) se aplica **solo al BOE**.
 - El filtro de tratamientos personales (don, doña, D.…) se aplica a todos los boletines. De los boletines autonómicos solo se leen las disposiciones generales; nombramientos, adjudicaciones y anuncios se descartan por su sección y se cuentan en el registro.
+
+### DOGC (Cataluña)
+
+Desde la versión 1.8, `"DOGC"` lee el Diari Oficial de la Generalitat de Catalunya a través del conjunto de datos abiertos «Normativa del DOGC i del Portal Jurídic de Catalunya» (`analisi.transparenciacatalunya.cat`).
+
+- **Qué cubre**: solo **leyes, decretos-ley, decretos, decretos legislativos y órdenes** (la sección 1 del DOGC). **No hay resoluciones** ni anuncios: el conjunto de datos no los incluye, así que una ejecución con el DOGC no ve toda la actividad del boletín.
+- **Sin departamento**: el conjunto de datos no publica el órgano que emite la norma, así que `department` vale siempre texto vacío y el filtro `departments` **no encuentra elementos del DOGC**. Los filtros `keywords` y `normTypes` sí funcionan (el tipo sale del rango de la norma: `Ley`, `Decreto-ley`, `Decreto`, `Decreto Legislativo` u `Orden`). En los avisos, esos elementos aparecen bajo «DOGC (Cataluña)».
+- **Sin retraso y con historial**: las normas aparecen el mismo día de su publicación en el DOGC. A diferencia del DOG, se puede pedir cualquier fecha del pasado: una petición por día (más páginas si un día supera 500 elementos). Un día sin normas (por ejemplo, un domingo) no es un error.
+- **Título y enlaces**: el título es el texto en castellano que publica la Generalitat (si falta, el catalán), sin modificar salvo la retirada de caracteres de control y de dirección. `urlHtml`, `urlPdf` y `urlXml` apuntan al [Portal Jurídic de Catalunya](https://portaljuridic.gencat.cat) (versión en castellano; en catalán si no hay otra) y solo se conservan si son `https` de ese sitio. **El Portal Jurídic no es una edición auténtica oficial**: para cualquier efecto jurídico, consulta el texto publicado en el DOGC.
+- **Atribución y licencia** ([Llicència oberta d'ús d'informació - Catalunya](https://web.gencat.cat/ca/generalitat/dades-indicadors/dades-obertes/llicencies)): se permite la reutilización, también en obras derivadas, citando la fuente, sin alterar el contenido ni su sentido e indicando la fecha de la última actualización de la información. Cada elemento lleva `source` (`Fuente: Generalitat de Catalunya. Entitat Autònoma del Diari Oficial i de Publicacions de la Generalitat de Catalunya (EADOP)`), `sourceUrl` (la página de la licencia) y `sourceUpdated`, la fecha de la última actualización del conjunto, que se lee con una sola petición adicional por ejecución (`api/views`); si esa petición falla, el campo se omite y la ejecución sigue. El pie de los resúmenes por correo, Telegram y Slack lleva la atribución, la dirección de la licencia, esa fecha y la frase «La Generalitat de Catalunya no participa en NormaWatch ni lo respalda.».
+- `relations` y la sección II-B no se aplican al DOGC. Las peticiones llevan el `User-Agent` identificado, una pausa entre peticiones y un tope de 5 páginas por día.
 
 ### Memoria y reanudación
 
@@ -236,16 +251,17 @@ Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales**
 
 - BOJA: una petición por fecha (hasta 200 elementos por página, como máximo 5 páginas), con la lista de campos cerrada: no se pide nunca el texto íntegro ni HTML. Un día sin boletín no es un error.
 - DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida. **El DOG sirve para ejecuciones diarias programadas, no para recuperar historial**: los días pasados devuelven siempre cero elementos; el registro de la ejecución lo avisa (una sola vez, con la fecha del número que trae el RSS y cuántas fechas pedidas no se pueden consultar). Se pide una sola vez por ejecución.
+- DOGC: una petición por fecha (hasta 500 elementos por página, como máximo 5 páginas), más una petición de metadatos por ejecución para `sourceUpdated`. Un día sin normas devuelve una lista vacía, no un error.
 - El DOG se pide una vez por ejecución y, si el RSS no responde (también con un 404), fallan solo los días del DOG.
-- Pausa mínima, `User-Agent` identificado (`normawatch-boe/1.7 (+https://github.com/saidcveltran/normawatch-boe)`), sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
+- Pausa mínima, `User-Agent` identificado (`normawatch-boe/1.8 (+https://github.com/saidcveltran/normawatch-boe)`), sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
 
 ### Licencias y atribución
 
-Mantén la línea de fuente (`source`) de cada elemento y la licencia de su boletín. **DOG (CC BY-SA 4.0, «compartir igual»)**: si compartes o publicas datos del DOG, incluidos los resúmenes que enviamos por correo, Telegram o Slack, o un conjunto que los combine con otros, debes citar la fuente, indicar si los has modificado y **distribuir tu obra derivada con la misma licencia CC BY-SA 4.0**, o una compatible. Eso afecta a lo que tú publicas con esos datos, no al uso interno. Los datos del BOJA (CC BY 4.0, <https://creativecommons.org/licenses/by/4.0/>) exigen citar la fuente, **enlazar la licencia** e **indicar si se han hecho cambios**; también los del DOG (CC BY-SA 4.0, <https://creativecommons.org/licenses/by-sa/4.0/>). En este Actor los cambios son: el campo `normType`, que se deriva del título; la selección de las disposiciones generales y de lo que cumple tus filtros; y la retirada de caracteres de control y de dirección del texto. Los resúmenes por correo, Telegram y Slack llevan en el pie la línea de fuente y la dirección de la licencia. Consulta el texto legal de cada licencia para los detalles.
+Mantén la línea de fuente (`source`) de cada elemento y la licencia de su boletín. **DOG (CC BY-SA 4.0, «compartir igual»)**: si compartes o publicas datos del DOG, incluidos los resúmenes que enviamos por correo, Telegram o Slack, o un conjunto que los combine con otros, debes citar la fuente, indicar si los has modificado y **distribuir tu obra derivada con la misma licencia CC BY-SA 4.0**, o una compatible. Eso afecta a lo que tú publicas con esos datos, no al uso interno. Los datos del BOJA (CC BY 4.0, <https://creativecommons.org/licenses/by/4.0/>) exigen citar la fuente, **enlazar la licencia** e **indicar si se han hecho cambios**; también los del DOG (CC BY-SA 4.0, <https://creativecommons.org/licenses/by-sa/4.0/>). En este Actor los cambios son: el campo `normType`, que se deriva del título; la selección de las disposiciones generales y de lo que cumple tus filtros; y la retirada de caracteres de control y de dirección del texto. Los resúmenes por correo, Telegram y Slack llevan en el pie la línea de fuente y la dirección de la licencia. **DOGC**: cita la fuente tal como figura en `source`, no alteres el contenido ni su sentido e indica la fecha de la última actualización (`sourceUpdated`); la licencia está en <https://web.gencat.cat/ca/generalitat/dades-indicadors/dades-obertes/llicencies>. Consulta el texto legal de cada licencia para los detalles.
 
 ### Qué no cubre
 
-No se leen BOCM (Madrid), DOGC (Cataluña), DOGV (Comunitat Valenciana) ni BOA (Aragón) porque no hay un punto de acceso automático y una licencia abierta confirmados. **BOPV (País Vasco)** tampoco está en la 1.5: su API de Open Data Euskadi (`api.euskadi.eus`, licencia CC BY 4.0) existe, pero el servidor responde 404 a las peticiones con el `User-Agent` identificado de NormaWatch (probado también con la forma `Mozilla/5.0 (compatible; normawatch-boe/1.5; +…)`) y solo responde a clientes genéricos; este Actor no se hace pasar por un navegador ni por otro programa. Se retomará si Open Data Euskadi admite un cliente identificado. No se hace extracción de páginas HTML. Cada boletín puede cambiar su formato; si falla, solo falla ese boletín.
+No se leen BOCM (Madrid), DOGV (Comunitat Valenciana) ni BOA (Aragón) porque no hay un punto de acceso automático y una licencia abierta confirmados. **BOPV (País Vasco)** tampoco está en la 1.5: su API de Open Data Euskadi (`api.euskadi.eus`, licencia CC BY 4.0) existe, pero el servidor responde 404 a las peticiones con el `User-Agent` identificado de NormaWatch (probado también con la forma `Mozilla/5.0 (compatible; normawatch-boe/1.5; +…)`) y solo responde a clientes genéricos; este Actor no se hace pasar por un navegador ni por otro programa. Se retomará si Open Data Euskadi admite un cliente identificado. No se hace extracción de páginas HTML. Cada boletín puede cambiar su formato; si falla, solo falla ese boletín.
 
 ## Qué cambia cada disposición (`relations`)
 
@@ -295,7 +311,7 @@ Con `followIds` el Actor marca en `followed` las disposiciones que cambian algun
 - Tope de 1000 documentos por ejecución. Tras cinco fallos seguidos (ya reintentados), tras 50 fallos en total, o al llegar a 1500 peticiones HTTP (reintentos incluidos) para relaciones, no se piden más documentos en esa ejecución.
 - Un fallo de un documento nunca hace fallar la ejecución ni cambia el código de salida: el elemento se entrega con `changesStatus` `error` o `skipped`. El registro muestra solo recuentos.
 - **El análisis puede publicarse un día después.** Si el BOE aún no lo tiene, `changesStatus` vale `pending` y `changes` está vacío. Con `onlyNew` ese elemento no se vuelve a entregar, así que no se completará solo; para ese caso, lanza una ejecución de revisión sin `onlyNew` unos días después.
-- No se aplica a la sección III ni a BOJA y DOG: esos elementos no llevan estos campos.
+- No se aplica a la sección III ni a BOJA, DOG y DOGC: esos elementos no llevan estos campos.
 - Con `relations` o `followIds` la memoria de `onlyNew` y el punto de control son distintos de los de antes (por eso la primera ejecución con la opción puede repetir elementos entregados sin ella). Sin la opción, la salida, las peticiones y la memoria son los de la 1.5.3.
 
 ## Vista de tabla en la consola de Apify
@@ -451,7 +467,7 @@ La salida de este Actor no es un texto oficial; para cualquier efecto jurídico,
 
 ## No es un servicio oficial
 
-NormaWatch no es un servicio oficial del BOE ni de la AEBOE. La Agencia Estatal Boletín Oficial del Estado no participa en este Actor, ni lo patrocina, ni lo respalda. Del mismo modo, ni la Junta de Andalucía ni la Xunta de Galicia participan en este proyecto ni lo respaldan.
+NormaWatch no es un servicio oficial del BOE ni de la AEBOE. La Agencia Estatal Boletín Oficial del Estado no participa en este Actor, ni lo patrocina, ni lo respalda. Del mismo modo, ni la Junta de Andalucía ni la Xunta de Galicia participan en este proyecto ni lo respaldan, y la Generalitat de Catalunya no participa en NormaWatch ni lo respalda.
 
 ## Datos personales
 

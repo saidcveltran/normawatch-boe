@@ -60,8 +60,10 @@ export type OutputItem = {
   sourceUrl: string;
   // Campo derivado por este Actor a partir del título; no es un metadato del BOE.
   normType: NormType;
-  // Boletín de origen: "BOE", "BOJA" o "DOG".
+  // Boletín de origen: "BOE", "BOJA", "DOG" o "DOGC".
   bulletin: string;
+  // Solo en el DOGC: fecha (AAAA-MM-DD, Madrid) de la última actualización del conjunto de datos de la Generalitat; falta si no se pudo leer.
+  sourceUpdated?: string;
   // Solo en la sección II-B (oposiciones): fase derivada del título; una pista de este Actor, no un dato oficial.
   stage?: Stage;
   // Solo con la opción relations y solo en la sección I del BOE.

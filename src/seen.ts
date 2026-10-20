@@ -46,8 +46,8 @@ export function seenKey(filters: {
 // Tope de identificadores recordados: al superarlo se olvidan los más antiguos.
 export const MAX_SEEN = 50_000;
 
-// Identificadores de cada boletín: BOE (BOE-A-2026-1), BOJA (disposition.2026.199.1) y DOG (DOG-AnuncioC3K1-280926-0001).
-const ID_FORMAT = /^(?:BOE-A-[0-9]{4}-[0-9]+|disposition\.[0-9]{4}\.[0-9]+\.[0-9]+|DOG-[A-Za-z0-9-]{1,80})$/;
+// Identificadores de cada boletín: BOE (BOE-A-2026-1), BOJA (disposition.2026.199.1), DOG (DOG-AnuncioC3K1-280926-0001) y DOGC (DOGC-26289051).
+const ID_FORMAT = /^(?:BOE-A-[0-9]{4}-[0-9]+|disposition\.[0-9]{4}\.[0-9]+\.[0-9]+|DOG-[A-Za-z0-9-]{1,80}|DOGC-[0-9]{1,20})$/;
 
 // De un valor guardado solo se conservan las entradas con forma de identificador del BOE.
 function parseIds(raw: unknown): Set<string> {

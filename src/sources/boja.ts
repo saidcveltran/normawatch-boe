@@ -127,7 +127,8 @@ export function parseBoja(json: unknown, date: string, retrievedAt: string): { i
       continue;
     }
     const rawTitle = entry["summaryNoHtml"];
-    if (typeof rawTitle === "string" && nameGuardHit(rawTitle)) {
+    // Sobre el texto tal cual y sobre el ya sin caracteres de control («D\u0000on» se guarda como «Don»).
+    if (typeof rawTitle === "string" && (nameGuardHit(rawTitle) || nameGuardHit(text(rawTitle)))) {
       dropped.nameGuard++;
       continue;
     }

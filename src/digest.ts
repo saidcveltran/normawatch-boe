@@ -2,10 +2,11 @@
 // biblioteca estándar. Todo texto del BOE se escapa según el destino y los enlaces solo salen de los
 // campos url* ya validados (https://www.boe.es/), que aquí se vuelven a comprobar.
 import { SOURCE_LINE } from "./sources/boe.ts";
+import { DOGC_LICENCE_NAME, DOGC_NOT_ENDORSED, DOGC_SOURCE_LINE, DOGC_SOURCE_URL } from "./sources/dogc.ts";
 import { UNSAFE_CHARS } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
 
-export type DigestItem = Pick<OutputItem, "department" | "title" | "normType" | "urlHtml" | "urlPdf" | "changes" | "followed"> & { section?: string; stage?: string; bulletin?: string; source?: string };
+export type DigestItem = Pick<OutputItem, "department" | "title" | "normType" | "urlHtml" | "urlPdf" | "changes" | "followed"> & { section?: string; stage?: string; bulletin?: string; source?: string; sourceUpdated?: string };
 export type DigestOptions = {
   dateFrom: string;
   dateTo: string;
@@ -32,7 +33,7 @@ export const MAX_MESSAGES = 10;
 const CHAT_TITLE_MAX = 300;
 const CHAT_DEPARTMENT_MAX = 120;
 
-const SAFE_BOE_URL = /^https:\/\/(?:www\.boe\.es|juntadeandalucia\.es|www\.juntadeandalucia\.es|www\.xunta\.gal)\/[A-Za-z0-9\-._~!$&'()*+,;=:@%/?]*$/;
+const SAFE_BOE_URL = /^https:\/\/(?:www\.boe\.es|juntadeandalucia\.es|www\.juntadeandalucia\.es|www\.xunta\.gal|portaljuridic\.gencat\.cat)\/[A-Za-z0-9\-._~!$&'()*+,;=:@%/?]*$/;
 const DATASET_URL = /^https:\/\/console\.apify\.com\/storage\/datasets\/[A-Za-z0-9]{5,40}$/;
 
 const STOP_TEXT = "Para dejar de recibir estos avisos, vacía el campo correspondiente en la entrada de NormaWatch o quita la programación.";
@@ -40,6 +41,8 @@ const STOP_TEXT = "Para dejar de recibir estos avisos, vacía el campo correspon
 function withLicenceUrl(line: string): string {
   if (line.endsWith("(CC BY-SA 4.0)")) return `${line} https://creativecommons.org/licenses/by-sa/4.0/`;
   if (line.endsWith("(CC BY 4.0)")) return `${line} https://creativecommons.org/licenses/by/4.0/`;
+  // DOGC: licencia propia de la Generalitat (citar la fuente, no alterar el contenido, indicar la fecha de actualización).
+  if (line === DOGC_SOURCE_LINE) return `${line}, ${DOGC_LICENCE_NAME} ${DOGC_SOURCE_URL}`;
   return line;
 }
 
@@ -51,7 +54,11 @@ function footerText(items: readonly DigestItem[]): string {
     if (!sources.includes(s)) sources.push(s);
   }
   if (sources.length === 0) sources.push(SOURCE_LINE);
-  return `${sources.join("; ")}. Resumen generado por NormaWatch; no es un texto oficial.`;
+  // DOGC: fecha de la última actualización de la información y aviso de que la Generalitat no respalda el servicio.
+  const dogc = items.filter((it) => it.bulletin === "DOGC");
+  const updated = dogc.map((it) => it.sourceUpdated).find((d): d is string => d !== undefined && /^\d{4}-\d{2}-\d{2}$/.test(d));
+  const shown = updated === undefined ? sources : sources.map((x) => (x.startsWith(DOGC_SOURCE_LINE) ? `${x}; información actualizada el ${ddmmyyyy(updated)}` : x));
+  return `${shown.join("; ")}. Resumen generado por NormaWatch; no es un texto oficial.${dogc.length > 0 ? ` ${DOGC_NOT_ENDORSED}` : ""}`;
 }
 
 // Verdadero si algún elemento no es del BOE: entonces cada elemento muestra su boletín.
@@ -154,13 +161,17 @@ function extraLines(it: DigestItem, compact: boolean = false): string[] {
 
 type Group = { department: string; items: DigestItem[] };
 
+// El conjunto del DOGC no tiene departamento: su apartado lleva el nombre del boletín. Para el resto, el departamento tal cual.
+const deptOf = (it: DigestItem): string => (it.department === "" && it.bulletin === "DOGC" ? "DOGC (Cataluña)" : it.department);
+
 // Agrupa por departamento en orden de primera aparición.
 function groupByDepartment(items: readonly DigestItem[]): Group[] {
   const groups = new Map<string, Group>();
   for (const it of items) {
-    const g = groups.get(it.department) ?? { department: it.department, items: [] };
+    const dept = deptOf(it);
+    const g = groups.get(dept) ?? { department: dept, items: [] };
     g.items.push(it);
-    groups.set(it.department, g);
+    groups.set(dept, g);
   }
   return [...groups.values()];
 }
@@ -245,7 +256,7 @@ const RENDERERS: Record<Flavour, Renderer> = {
 };
 
 function chatBlock(it: DigestItem, r: Renderer, withDepartment: boolean, mixed: boolean, compact: boolean = false): string {
-  const head = withDepartment ? `${r.bold(r.text(cut(oneLine(it.department), CHAT_DEPARTMENT_MAX)))}\n` : "";
+  const head = withDepartment ? `${r.bold(r.text(cut(oneLine(deptOf(it)), CHAT_DEPARTMENT_MAX)))}\n` : "";
   const links: string[] = [];
   const h = safeUrl(it.urlHtml);
   const p = safeUrl(it.urlPdf);
@@ -286,7 +297,7 @@ function chatChunks(
     // Al pasar del apartado de normas seguidas al resto, el departamento se vuelve a mostrar.
     if (previousFollowed && !followed) currentDept = undefined;
     const heading = followed && !headingDone ? `${r.bold(r.text(FOLLOW_HEADING))}\n` : "";
-    let block = heading + chatBlock(it, r, currentDept !== it.department, mixed);
+    let block = heading + chatBlock(it, r, currentDept !== deptOf(it), mixed);
     let headingShown = heading !== "";
     if (current.length + 2 + block.length > limit) {
       if (messages.length + 1 >= cap) break;
@@ -301,7 +312,7 @@ function chatChunks(
       }
     }
     current = current === "" ? block : `${current}\n\n${block}`;
-    currentDept = it.department;
+    currentDept = deptOf(it);
     if (followed && headingShown) headingDone = true;
     previousFollowed = followed;
     consumed++;
