@@ -6,9 +6,24 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.2.0] - 2026-10-20
+
 ### Añadido
 
 - Logotipo e icono de NormaWatch (`assets/logo`) e imágenes de ejemplo con datos reales (`assets/muestras`).
+- Resumen por correo: campo de entrada secreto `emailTo`. Tras la ejecución se envía un resumen (asunto fijo, texto y HTML, agrupado por departamento, máximo 100 elementos con «y N más» y enlace al conjunto de datos) mediante el Actor `apify/send-mail` (256 MB, 120 s) a una sola dirección. En el plan gratuito de Apify solo se admite la dirección de la propia cuenta de Apify. El envío es una ejecución adicional que Apify factura al usuario.
+- Avisos por Telegram (`telegramBotToken`, secreto, y `telegramChatId`) y por Slack (`slackWebhookUrl`, secreto): como máximo 10 mensajes por canal y ejecución, con la separación que piden ambos servicios, una sola espera ante un 429 (`retry_after` o `Retry-After`, máximo 30 s) y abandono del canal si persiste. Los servidores de destino son constantes (`api.telegram.org` y `hooks.slack.com`), sin redirecciones, con tiempo máximo de 15 s y lectura de respuesta limitada a 64 KB.
+- Campo de entrada `notifyWhenEmpty`: por defecto solo se avisa si la ejecución entrega al menos un elemento.
+- Código de salida `3`: los elementos se entregaron, pero al menos un aviso falló. Con avisos configurados, la memoria `SEEN` se confirma al final y solo si todos los avisos salieron bien; sin avisos, el comportamiento no cambia.
+- El registro y el mensaje de estado nunca contienen direcciones, tokens, webhooks ni identificadores de chat: ante un error solo se anotan su nombre y el estado HTTP.
+
+### Cambiado
+
+- Versión 1.2.0; el `User-Agent` pasa a `normawatch-boe/1.2`.
+
+### Corregido
+
+- La memoria por defecto de cada ejecución pasa a 256 MB (`defaultRunOptions.memoryMbytes`); antes la plataforma usaba 4096 MB por defecto.
 
 ## [1.1.0] - 2026-10-20
 
