@@ -178,7 +178,7 @@ Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales**
 
 | Boletín | Fuente oficial | Licencia | Línea de fuente (`source`) |
 |---|---|---|---|
-| BOJA (Andalucía) | API de datos abiertos de la Junta de Andalucía, `datos.juntadeandalucia.es/api/v0/boja`, sección «1. Disposiciones generales» | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `Fuente: Junta de Andalucía, BOJA (CC BY 4.0)` |
+| BOJA (Andalucía) | API de datos abiertos de la Junta de Andalucía, `datos.juntadeandalucia.es/api/v0/boja`, sección «1. Disposiciones generales» | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) («Reconocimiento 4.0 Internacional»), según el conjunto [BOJA disposiciones del año 2026](https://www.juntadeandalucia.es/datosabiertos/portal/dataset/27e79cef-d68d-4b7c-9c87-ae82309d4dcb) del portal de datos abiertos de la Junta | `Fuente: Junta de Andalucía, BOJA (CC BY 4.0)` |
 | DOG (Galicia) | RSS oficial de la sección I del Diario Oficial de Galicia, `www.xunta.gal/diario-oficial-galicia` | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.es) (conjunto «Actualidade do Diario Oficial de Galicia» de [Abertos Xunta](https://abertos.xunta.gal/catalogo/administracion-publica/-/dataset/0262/actualidade-diario-oficial-galicia)) | `Fuente: Xunta de Galicia, Diario Oficial de Galicia (CC BY-SA 4.0)` |
 
 ### Qué cambia en la salida
@@ -197,7 +197,7 @@ Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales**
 ### Límites
 
 - BOJA: una petición por fecha (hasta 200 elementos por página, como máximo 5 páginas), con la lista de campos cerrada: no se pide nunca el texto íntegro ni HTML. Un día sin boletín no es un error.
-- DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida; no sirve para recuperar días pasados, y conviene programar la ejecución a diario. Se pide una sola vez por ejecución.
+- DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida. **El DOG sirve para ejecuciones diarias programadas, no para recuperar historial**: los días pasados devuelven siempre cero elementos. Se pide una sola vez por ejecución.
 - Pausa mínima, `User-Agent` identificado, sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
 
 ### Licencias y atribución
@@ -206,7 +206,7 @@ Mantén la línea de fuente (`source`) de cada elemento y la licencia de su bole
 
 ### Qué no cubre
 
-No se leen BOCM (Madrid), DOGC (Cataluña), DOGV (Comunitat Valenciana) ni BOA (Aragón) porque no hay un punto de acceso automático y una licencia abierta confirmados. **BOPV (País Vasco)** tampoco está en la 1.5: su API de Open Data Euskadi no pudo confirmarse y el sumario en XML solo cubre el último número, sin la sección. No se hace extracción de páginas HTML. Cada boletín puede cambiar su formato; si falla, solo falla ese boletín.
+No se leen BOCM (Madrid), DOGC (Cataluña), DOGV (Comunitat Valenciana) ni BOA (Aragón) porque no hay un punto de acceso automático y una licencia abierta confirmados. **BOPV (País Vasco)** tampoco está en la 1.5: su API de Open Data Euskadi (`api.euskadi.eus`, licencia CC BY 4.0) existe, pero el servidor responde 404 a las peticiones con el `User-Agent` identificado de NormaWatch (probado también con la forma `Mozilla/5.0 (compatible; normawatch-boe/1.5; +…)`) y solo responde a clientes genéricos; este Actor no se hace pasar por un navegador ni por otro programa. Se retomará si Open Data Euskadi admite un cliente identificado. No se hace extracción de páginas HTML. Cada boletín puede cambiar su formato; si falla, solo falla ese boletín.
 
 ## Vista de tabla en la consola de Apify
 

@@ -11,7 +11,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Añadido
 
 - Boletines autonómicos junto al BOE: el campo `bulletins` (selector con `"BOE"`, `"BOJA"` y `"DOG"`, por defecto `["BOE"]`). De cada uno se leen solo las disposiciones generales.
-- BOJA (Junta de Andalucía, CC BY 4.0) por su API de datos abiertos, con una consulta por fecha y una lista de campos cerrada (sin texto íntegro ni HTML).
+- BOJA (Junta de Andalucía, CC BY 4.0, «Reconocimiento 4.0 Internacional», según su portal de datos abiertos) por su API de datos abiertos, con una consulta por fecha y una lista de campos cerrada (sin texto íntegro ni HTML).
 - DOG (Xunta de Galicia, CC BY-SA 4.0) por el RSS oficial de la sección I, leído con un lector XML propio y acotado (`src/xml.ts`) que rechaza `<!DOCTYPE` y declaraciones de entidad, con tope de tamaño, de profundidad y de elementos. El RSS solo contiene el último número: no sirve para días pasados.
 - Campo `bulletin` en cada elemento (`"BOE"` en los del BOE, único cambio de su salida), y `id`, `section`, `source` y `sourceUrl` propios de cada boletín. `urlXml` falta donde la fuente no lo tiene.
 - Aislamiento de fallos: un boletín roto registra el error y falla solo sus días, con su propio cortacircuitos; la ejecución termina con código 1 únicamente si fallan todos los elegidos. `STATE` guarda el boletín siguiente y el estado de cada fuente, y al reanudar no se repite ni se salta ningún día de ninguna fuente.
@@ -26,7 +26,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ### No incluido
 
-- BOPV (País Vasco): no se pudo confirmar una API oficial por fecha ni su sección de disposiciones generales, y no se extrae HTML.
+- BOPV (País Vasco): su API de Open Data Euskadi (CC BY 4.0) responde 404 al `User-Agent` identificado de NormaWatch, también con la forma `Mozilla/5.0 (compatible; normawatch-boe/1.5; +…)`, y solo responde a clientes genéricos. El Actor no se hace pasar por otro programa, así que BOPV queda fuera de la 1.5. Tampoco se extrae HTML.
 
 ## [1.4.0] - 2026-10-20
 
