@@ -6,6 +6,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.5.1] - 2026-10-20
+
+### Cambiado
+
+- El formulario de la consola de Apify trae fechas de ejemplo (del 16 al 19 de octubre de 2026, días reales del BOE) mediante `prefill` en `dateFrom` y `dateTo`, para que la prueba diaria de la tienda y una primera ejecución devuelvan resultados. No hay valores `default`: quien llama por la API sin fechas sigue leyendo hoy, igual que en la 1.5.0.
+- La descripción del Actor y la de `package.json` coinciden con la de la tienda.
+
 ## [1.5.0] - 2026-10-20
 
 ### Añadido

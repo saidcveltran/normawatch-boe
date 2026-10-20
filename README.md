@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.0-1636B5?style=flat" alt="Versión 1.5.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.1-1636B5?style=flat" alt="Versión 1.5.1"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -60,6 +60,7 @@ Para quien necesita enterarse de la normativa nueva sin revisar el BOE a mano: d
 
 1. Abre el Actor en tu cuenta de Apify.
 2. Rellena la entrada: las fechas (`dateFrom` y `dateTo`) y, si quieres, los filtros; una entrada vacía devuelve las disposiciones de hoy (ver [Entrada](#entrada)).
+   El formulario de la consola trae fechas de ejemplo (del 16 al 19 de octubre de 2026) para que una primera ejecución muestre resultados; para leer el BOE de hoy, borra ambas fechas.
 3. Ejecútalo, o programa una ejecución diaria con `onlyNew` activado para recibir solo lo nuevo (ver [Cómo funciona `onlyNew`](#cómo-funciona-onlynew)).
 4. Lee el resultado en la pestaña de resultados, en la vista **Resumen** de la tabla.
 5. Descarga el conjunto de datos en el formato que necesites (por ejemplo JSON o CSV) o léelo por la API de Apify.

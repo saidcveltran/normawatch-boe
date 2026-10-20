@@ -2,7 +2,7 @@
   "actorSpecification": 1,
   "name": "normawatch-boe",
   "title": "NormaWatch",
-  "description": "Monitor de datos del BOE: nuevas disposiciones generales (sección I) en JSON, solo metadatos y enlaces.",
+  "description": "Las nuevas disposiciones generales del BOE, y si quieres del BOJA y el DOG, cada día en JSON y en tabla, con aviso opcional por correo, Telegram o Slack. Solo metadatos y enlaces oficiales. Gratis.",
   "version": "1.5",
   "minMemoryMbytes": 256,
   "maxMemoryMbytes": 256,

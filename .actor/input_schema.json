@@ -7,14 +7,16 @@
     "dateFrom": {
       "title": "Fecha desde",
       "type": "string",
-      "description": "Primera fecha del BOE que se lee, no posterior a hoy (Europe/Madrid). Vacía significa hoy.",
+      "description": "Primera fecha del BOE que se lee, no posterior a hoy (Europe/Madrid). El formulario de la consola muestra fechas de ejemplo (16 a 19 de octubre de 2026) para que una primera ejecución ya dé resultados; si dejas vacías ambas fechas, se lee hoy.",
+      "prefill": "2026-10-16",
       "editor": "datepicker",
       "dateType": "absolute"
     },
     "dateTo": {
       "title": "Fecha hasta",
       "type": "string",
-      "description": "Última fecha del BOE que se lee, como máximo 366 días después de la fecha desde. Vacía significa la fecha desde. Con más de 31 días de diferencia se leen primero los días más recientes y la pausa entre peticiones es de al menos 1000 ms.",
+      "description": "Última fecha del BOE que se lee (el formulario de la consola muestra fechas de ejemplo; si dejas vacías ambas fechas, se lee hoy), como máximo 366 días después de la fecha desde. Vacía significa la fecha desde. Con más de 31 días de diferencia se leen primero los días más recientes y la pausa entre peticiones es de al menos 1000 ms.",
+      "prefill": "2026-10-19",
       "editor": "datepicker",
       "dateType": "absolute"
     },
