@@ -62,7 +62,8 @@ export async function fetchBojaDay(isoDate: string, options: FetchOptions = {}):
     const doc = res.body;
     if (!isObj(doc) || !Array.isArray(doc["results"])) throw new BoeError("documento del BOJA inesperado");
     const batch = doc["results"] as unknown[];
-    results.push(...batch);
+    if (batch.length > PAGE_SIZE) throw new BoeError(`el BOJA devolvió una página de más de ${PAGE_SIZE} elementos para el ${isoDate}`);
+    for (const entry of batch) results.push(entry);
     const total = typeof doc["total_hits"] === "number" ? doc["total_hits"] : results.length;
     if (batch.length < PAGE_SIZE || results.length >= total) return { status: "ok", body: { results }, requests };
   }

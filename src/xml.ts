@@ -20,6 +20,27 @@ function isSpace(ch: string): boolean {
   return ch === " " || ch === "\t" || ch === "\n" || ch === "\r";
 }
 
+// Producción Char de XML 1.0: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF].
+function isXmlChar(code: number): boolean {
+  return code === 0x9 || code === 0xa || code === 0xd || (code >= 0x20 && code <= 0xd7ff) || (code >= 0xe000 && code <= 0xfffd) || (code >= 0x10000 && code <= 0x10ffff);
+}
+
+const isBidi = (code: number): boolean => (code >= 0x202a && code <= 0x202e) || (code >= 0x2066 && code <= 0x2069) || code === 0x200e || code === 0x200f || code === 0x61c;
+
+// Todo carácter del documento (texto, CDATA, comentarios, etiquetas) debe cumplir Char; un sustituto suelto no.
+function checkChars(xml: string): void {
+  for (let i = 0; i < xml.length; i++) {
+    const c = xml.charCodeAt(i);
+    if (c >= 0xd800 && c <= 0xdbff) {
+      const next = xml.charCodeAt(i + 1);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) fail("carácter no válido");
+      i++;
+    } else if (!isXmlChar(c)) {
+      fail("carácter no válido");
+    }
+  }
+}
+
 // Expande entidades predefinidas y referencias numéricas; cualquier otra entidad es un error.
 function decode(raw: string): string {
   if (!raw.includes("&")) return raw;
@@ -40,8 +61,9 @@ function decode(raw: string): string {
       const digits = name.slice(hex ? 2 : 1);
       const valid = digits.length > 0 && [...digits].every((c) => (hex ? "0123456789abcdefABCDEF" : "0123456789").includes(c));
       const code = valid ? Number.parseInt(digits, hex ? 16 : 10) : Number.NaN;
-      const control = code < 0x20 && code !== 0x9 && code !== 0xa && code !== 0xd;
-      if (!Number.isInteger(code) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff) || control || code === 0) {
+      // Fuera de la producción Char de XML 1.0, o un control (DEL, C1) o un control bidireccional: no hay motivo
+      // legítimo para escribirlos como referencia.
+      if (!Number.isInteger(code) || !isXmlChar(code) || (code >= 0x7f && code <= 0x9f) || isBidi(code)) {
         return fail("referencia numérica no válida");
       }
       out += String.fromCodePoint(code);
@@ -71,6 +93,7 @@ function tagEnd(xml: string, from: number): number {
 export function parseXml(input: string): XmlNode {
   if (typeof input !== "string" || Buffer.byteLength(input, "utf8") > XML_MAX_BYTES) return fail("documento demasiado grande");
   const xml = input.charCodeAt(0) === 0xfeff ? input.slice(1) : input;
+  checkChars(xml);
   const lower = xml.toLowerCase();
   if (lower.includes("<!doctype") || lower.includes("<!entity")) return fail("DOCTYPE y entidades no admitidos");
   const stack: XmlNode[] = [];

@@ -2,6 +2,7 @@
 // biblioteca estándar. Todo texto del BOE se escapa según el destino y los enlaces solo salen de los
 // campos url* ya validados (https://www.boe.es/), que aquí se vuelven a comprobar.
 import { SOURCE_LINE } from "./sources/boe.ts";
+import { UNSAFE_CHARS } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
 
 export type DigestItem = Pick<OutputItem, "department" | "title" | "normType" | "urlHtml" | "urlPdf"> & { bulletin?: string; source?: string };
@@ -35,11 +36,18 @@ const SAFE_BOE_URL = /^https:\/\/(?:www\.boe\.es|juntadeandalucia\.es|www\.junta
 const DATASET_URL = /^https:\/\/console\.apify\.com\/storage\/datasets\/[A-Za-z0-9]{5,40}$/;
 
 const STOP_TEXT = "Para dejar de recibir estos avisos, vacía el campo correspondiente en la entrada de NormaWatch o quita la programación.";
+// CC BY 4.0 exige enlazar la licencia: las líneas de fuente del BOJA y del DOG llevan su URL en el pie.
+function withLicenceUrl(line: string): string {
+  if (line.endsWith("(CC BY-SA 4.0)")) return `${line} https://creativecommons.org/licenses/by-sa/4.0/`;
+  if (line.endsWith("(CC BY 4.0)")) return `${line} https://creativecommons.org/licenses/by/4.0/`;
+  return line;
+}
+
 // Pie con la atribución de cada fuente presente (solo el BOE si no hay otras): conserva la licencia de cada una.
 function footerText(items: readonly DigestItem[]): string {
   const sources: string[] = [];
   for (const it of items) {
-    const s = it.source ?? SOURCE_LINE;
+    const s = withLicenceUrl(it.source ?? SOURCE_LINE);
     if (!sources.includes(s)) sources.push(s);
   }
   if (sources.length === 0) sources.push(SOURCE_LINE);
@@ -64,7 +72,8 @@ function escapeSlack(v: string): string {
 }
 
 // Una sola línea: los saltos y tabuladores del título se vuelven espacios.
-const oneLine = (v: string): string => v.replace(/\s+/g, " ").trim();
+// Además se quitan los controles y los caracteres bidireccionales, que no deben llegar a ningún aviso.
+const oneLine = (v: string): string => v.replace(/\s+/g, " ").replace(UNSAFE_CHARS, "").trim();
 
 function cut(v: string, max: number): string {
   const chars = [...v];

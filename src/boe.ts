@@ -23,6 +23,17 @@ export { BoeError, errName, madridToday, parseInput };
 export { BASE_URL, MAX_BYTES, TIMEOUT_MS, USER_AGENT, buildSumarioUrl, fetchSumario };
 export type { RunInput, FetchOptions, FetchResult };
 
+// Con varias fuentes, una excepción que no es BoeError se convierte en el fallo de esa fuente ese día, para que
+// una fuente rota nunca detenga a las demás. Con el BOE solo no cambia nada (código de salida 1, como en la 1.4).
+async function guardSource<T>(multi: boolean, f: () => Promise<T>): Promise<T> {
+  try {
+    return await f();
+  } catch (err) {
+    if (!multi || err instanceof BoeError) throw err;
+    throw new BoeError(`error inesperado del adaptador (${errName(err)})`);
+  }
+}
+
 export type RunDeps = {
   // El segundo argumento solo se pasa cuando la entrada elige boletines distintos del BOE solo.
   fetchDay: (date: string, bulletin?: string) => Promise<FetchResult>;
@@ -281,7 +292,8 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
     if (executed) await deps.sleep(input.requestDelayMs);
     executed = true;
     try {
-      const result = multi || bulletin !== "BOE" ? await deps.fetchDay(date, bulletin) : await deps.fetchDay(date);
+      // Con varias fuentes, cualquier excepción de un adaptador es el fallo de esa fuente ese día.
+      const result = await guardSource(multi, () => (multi || bulletin !== "BOE" ? deps.fetchDay(date, bulletin) : deps.fetchDay(date)));
       summary.requests += result.requests;
       if (result.status === "empty") {
         st.rateLimitedStreak = 0;
@@ -290,7 +302,7 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
         await checkpoint(t + 1);
         continue;
       }
-      const parsed = adapterFor(bulletin).parseDay(result.body, date, deps.now(), input.sections);
+      const parsed = await guardSource(multi, async () => adapterFor(bulletin).parseDay(result.body, date, deps.now(), input.sections));
       const { dropped } = parsed;
       const matching = parsed.items.filter((it) => matchesFilters(it, input));
       const candidates: OutputItem[] = [];

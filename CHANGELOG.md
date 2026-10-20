@@ -22,7 +22,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 - El código del BOE pasa a `src/sources/boe.ts` sin cambiar su comportamiento; el cliente HTTP común (`src/http.ts`) lo usan todas las fuentes.
 - La clave de `SEEN` y la huella de reanudación incluyen `bulletins` solo cuando no es `["BOE"]`: con el valor por defecto, son idénticas a las de la 1.4. La memoria de `SEEN` admite los identificadores de cada boletín.
-- El `User-Agent` pasa a `normawatch-boe/1.5`.
+- El `User-Agent` pasa a `normawatch-boe/1.5 (+https://github.com/saidcveltran/normawatch-boe)`.
+- Con varios boletines, cualquier excepción de un adaptador es el fallo de esa fuente ese día y no detiene a las demás; una página del BOJA con más de 200 elementos es un fallo del BOJA. Con el BOE solo no cambia nada.
+- El identificador del DOG se limita a 76 caracteres tras `DOG-` y un enlace de más de 2000 caracteres se descarta como enlace no válido.
+- Un 404 del RSS del DOG ya no es un día vacío sino un fallo del DOG; el resultado (documento o fallo) se memoriza y el RSS se pide y se analiza una sola vez por ejecución.
+- El lector XML rechaza los caracteres fuera de la producción `Char` de XML 1.0 y las referencias numéricas a controles y a caracteres de dirección; los textos de salida y los resúmenes pierden controles C0/C1 y caracteres bidireccionales.
+- Los pies de los resúmenes del BOJA y del DOG llevan la dirección de su licencia; el README indica los cambios que hace el Actor y que ni la Junta de Andalucía ni la Xunta de Galicia respaldan el proyecto.
 
 ### No incluido
 

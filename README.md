@@ -14,7 +14,7 @@
 
 **NormaWatch** es un **Actor de Apify** (así llama Apify a los programas que se ejecutan en su plataforma) que lista las nuevas **disposiciones generales** (sección I) del Boletín Oficial del Estado (BOE), solo con metadatos y enlaces, para que puedas vigilar la normativa nueva sin leer el sumario cada día. Está pensado para quien sigue la normativa española: asesorías, despachos, equipos de cumplimiento normativo y periodistas. Es **gratuito**: no tiene precio ni suscripción.
 
-> Basado en datos de la [Agencia Estatal Boletín Oficial del Estado](https://www.boe.es) y, si lo eliges, de la Junta de Andalucía (BOJA, CC BY 4.0) y la Xunta de Galicia (DOG, CC BY-SA 4.0; ver [Boletines autonómicos](#boletines-autonómicos)). Este Actor no es un servicio oficial del BOE ni de la AEBOE, y su resultado no es un texto oficial. La Agencia no participa en este Actor, ni lo patrocina, ni lo respalda.
+> Basado en datos de la [Agencia Estatal Boletín Oficial del Estado](https://www.boe.es) y, si lo eliges, de la Junta de Andalucía (BOJA, CC BY 4.0) y la Xunta de Galicia (DOG, CC BY-SA 4.0; ver [Boletines autonómicos](#boletines-autonómicos)). Este Actor no es un servicio oficial del BOE ni de la AEBOE, y su resultado no es un texto oficial. La Agencia no participa en este Actor, ni lo patrocina, ni lo respalda. Ni la Junta de Andalucía ni la Xunta de Galicia participan en este proyecto ni lo respaldan.
 
 ## Contenido
 
@@ -198,11 +198,12 @@ Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales**
 
 - BOJA: una petición por fecha (hasta 200 elementos por página, como máximo 5 páginas), con la lista de campos cerrada: no se pide nunca el texto íntegro ni HTML. Un día sin boletín no es un error.
 - DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida. **El DOG sirve para ejecuciones diarias programadas, no para recuperar historial**: los días pasados devuelven siempre cero elementos. Se pide una sola vez por ejecución.
-- Pausa mínima, `User-Agent` identificado, sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
+- El DOG se pide una vez por ejecución y, si el RSS no responde (también con un 404), fallan solo los días del DOG.
+- Pausa mínima, `User-Agent` identificado (`normawatch-boe/1.5 (+https://github.com/saidcveltran/normawatch-boe)`), sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
 
 ### Licencias y atribución
 
-Mantén la línea de fuente (`source`) de cada elemento y la licencia de su boletín. **DOG (CC BY-SA 4.0, «compartir igual»)**: si compartes o publicas datos del DOG, incluidos los resúmenes que enviamos por correo, Telegram o Slack, o un conjunto que los combine con otros, debes citar la fuente, indicar si los has modificado y **distribuir tu obra derivada con la misma licencia CC BY-SA 4.0**, o una compatible. Eso afecta a lo que tú publicas con esos datos, no al uso interno. Los datos del BOJA (CC BY 4.0) solo exigen citar la fuente y la licencia. Consulta el texto legal de cada licencia para los detalles.
+Mantén la línea de fuente (`source`) de cada elemento y la licencia de su boletín. **DOG (CC BY-SA 4.0, «compartir igual»)**: si compartes o publicas datos del DOG, incluidos los resúmenes que enviamos por correo, Telegram o Slack, o un conjunto que los combine con otros, debes citar la fuente, indicar si los has modificado y **distribuir tu obra derivada con la misma licencia CC BY-SA 4.0**, o una compatible. Eso afecta a lo que tú publicas con esos datos, no al uso interno. Los datos del BOJA (CC BY 4.0, <https://creativecommons.org/licenses/by/4.0/>) exigen citar la fuente, **enlazar la licencia** e **indicar si se han hecho cambios**; también los del DOG (CC BY-SA 4.0, <https://creativecommons.org/licenses/by-sa/4.0/>). En este Actor los cambios son: el campo `normType`, que se deriva del título; la selección de las disposiciones generales y de lo que cumple tus filtros; y la retirada de caracteres de control y de dirección del texto. Los resúmenes por correo, Telegram y Slack llevan en el pie la línea de fuente y la dirección de la licencia. Consulta el texto legal de cada licencia para los detalles.
 
 ### Qué no cubre
 
@@ -360,7 +361,7 @@ La salida de este Actor no es un texto oficial; para cualquier efecto jurídico,
 
 ## No es un servicio oficial
 
-NormaWatch no es un servicio oficial del BOE ni de la AEBOE. La Agencia Estatal Boletín Oficial del Estado no participa en este Actor, ni lo patrocina, ni lo respalda.
+NormaWatch no es un servicio oficial del BOE ni de la AEBOE. La Agencia Estatal Boletín Oficial del Estado no participa en este Actor, ni lo patrocina, ni lo respalda. Del mismo modo, ni la Junta de Andalucía ni la Xunta de Galicia participan en este proyecto ni lo respaldan.
 
 ## Datos personales
 

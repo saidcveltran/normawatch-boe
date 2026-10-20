@@ -71,7 +71,17 @@ export function many(v: unknown): Obj[] {
 
 // Los textos no se truncan, porque alteraría los metadatos del BOE: uno demasiado largo descarta el elemento.
 export function text(v: unknown): string {
-  return typeof v === "string" ? v : "";
+  return typeof v === "string" ? cleanText(v) : "";
+}
+
+// Controles C0/C1 (categoría Cc, incluido U+007F) y controles bidireccionales: U+061C, U+200E-200F, U+202A-202E y
+// U+2066-2069. Nunca deben llegar a la salida ni a los avisos.
+export const UNSAFE_CHARS = /[\p{Cc}؜‎‏‪-‮⁦-⁩]/gu;
+
+// Quita esos caracteres de un texto de salida conservando el tabulador y los saltos de línea, que se tratan
+// como espacio al mostrarlos. Un texto sin ellos queda idéntico.
+export function cleanText(v: string): string {
+  return v.replace(UNSAFE_CHARS, (c) => (c === "\t" || c === "\n" || c === "\r" ? c : ""));
 }
 
 // Líneas de registro para lo descartado: solo recuentos, nunca contenido.
