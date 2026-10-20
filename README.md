@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.3.0-1636B5?style=flat" alt="Versión 1.3.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.4.0-1636B5?style=flat" alt="Versión 1.4.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -24,6 +24,7 @@
 - [Entrada](#entrada)
 - [Salida](#salida)
 - [Tipo de norma (derivado)](#tipo-de-norma-derivado)
+- [Sección III (opcional)](#sección-iii-opcional)
 - [Vista de tabla en la consola de Apify](#vista-de-tabla-en-la-consola-de-apify)
 - [Ejemplo de resultado](#ejemplo-de-resultado)
 - [Cómo funciona onlyNew](#cómo-funciona-onlynew)
@@ -43,6 +44,7 @@
 - Consulta el sumario diario del BOE (API de datos abiertos) para las fechas que indiques, hasta 367 días (un año) en una ejecución.
 - Se queda solo con la **sección I (disposiciones generales)** y devuelve, por cada una, sus **metadatos y los enlaces** oficiales en HTML, PDF y XML.
 - Filtra por **departamento**, por **palabras del título** y por **tipo de norma**.
+- Opcionalmente, y **desactivado por defecto**, añade una parte restringida de la **sección III** («Otras disposiciones»): solo ciertos epígrafes y con filtros contra los datos personales (ver [Sección III](#sección-iii-opcional)).
 - Con `onlyNew` entrega solo lo que no se había entregado antes, pensado para una ejecución programada cada día.
 - Añade el **tipo de norma**, deducido del título y marcado como derivado (ver [Tipo de norma](#tipo-de-norma-derivado)).
 - Muestra el resultado como una **tabla en la consola de Apify** (ver [Vista de tabla](#vista-de-tabla-en-la-consola-de-apify)) y lo puedes descargar en los formatos que Apify ofrece para cualquier conjunto de datos (por ejemplo JSON o CSV).
@@ -72,6 +74,7 @@ Todos los campos son opcionales. Una entrada vacía devuelve las disposiciones d
 | `departments` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su departamento contiene alguno de los textos (sin distinguir mayúsculas; texto literal, no expresión regular). |
 | `keywords` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su título contiene alguno de los textos (sin distinguir mayúsculas; texto literal). |
 | `normTypes` | lista de tipos de norma | sin filtro (todos los tipos) | Selector múltiple. Valores admitidos, tal como los escribe el BOE: `Corrección de errores`, `Instrumento de ratificación`, `Real Decreto Legislativo`, `Real Decreto-ley`, `Real Decreto`, `Ley Orgánica`, `Ley Foral`, `Ley`, `Decreto Legislativo`, `Decreto-ley`, `Decreto`, `Orden`, `Resolución`, `Circular`, `Acuerdo internacional` y `Otro`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Tipo de norma](#tipo-de-norma-derivado). |
+| `sections` | lista de secciones | `["1"]` (solo la sección I) | Selector múltiple con `"1"` (disposiciones generales) y `"3"` (otras disposiciones, restringida y con filtros). Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Sección III](#sección-iii-opcional). |
 | `onlyNew` | verdadero o falso | `false` | Ver [Cómo funciona `onlyNew`](#cómo-funciona-onlynew). |
 | `emailTo` | texto (secreto) | sin correo | Una sola dirección. En el plan gratuito de Apify debe ser la de tu propia cuenta de Apify. Se guarda cifrada. Ver [Avisos](#avisos-por-correo-telegram-y-slack). |
 | `notifyWhenEmpty` | verdadero o falso | `false` | Por defecto solo se avisa si la ejecución entrega algo; con `true` se avisa también cuando no hay novedades. |
@@ -104,7 +107,7 @@ Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivad
 |---|---|
 | `id` | Identificador del BOE, con la forma `BOE-A-AAAA-N`. |
 | `date` | Fecha de publicación del sumario (`AAAA-MM-DD`). |
-| `section` | Siempre `"1"` (sección I). |
+| `section` | `"1"` (sección I). Vale `"3"` solo en los elementos de la sección III, y solo si activas `sections` (ver [Sección III](#sección-iii-opcional)). |
 | `department` | Departamento que emite la disposición, tal como lo publica el BOE. |
 | `epigraph` | Epígrafe bajo el que aparece, o texto vacío si no tiene. |
 | `title` | Título de la disposición, sin modificar. |
@@ -144,6 +147,28 @@ El BOE no publica el tipo de norma en el sumario, así que el Actor lo deriva de
 
 Es un campo derivado por este Actor, no un dato del BOE, y puede equivocarse: por ejemplo, un título que no empiece por el nombre de la norma (como una sentencia o un acuerdo de otro departamento) se clasifica como `Otro`, y los tipos que el BOE escribe de otra forma no se reconocen. Si lo reutilizas, indícalo como derivado.
 
+## Sección III (opcional)
+
+Desde la versión 1.4 puedes añadir la **sección III** del BOE («Otras disposiciones»), donde se publican convenios, ayudas, becas, planes de estudios y otros actos que no son de carácter general. Está **desactivada por defecto**: una ejecución sin el campo `sections` devuelve exactamente lo mismo que en la 1.3. Para activarla, indica `"sections": ["1", "3"]` (o `["3"]` si solo quieres esa sección). Cada elemento de la sección III lleva `"section": "3"`.
+
+La sección III incluye muchos títulos que nombran a personas físicas (indultos, premios, condecoraciones, recursos, listas de adjudicatarios…). Por eso el Actor **no la lee entera**: aplica cuatro controles.
+
+1. **Listado cerrado de epígrafes.** Solo pasan los elementos cuyo epígrafe es exactamente uno de estos (sin distinguir mayúsculas ni la forma de escribir los acentos): `Convenios`, `Encomienda de gestión`, `Delegación de competencias`, `Planes de estudios`, `Cartas de servicios`, `Subvenciones`, `Ayudas`, `Becas`, `Impacto ambiental`, `Instalaciones eléctricas`, `Homologaciones`, `Normalización`, `Mercado de divisas` y `Convenios colectivos de trabajo`. Todo lo demás se descarta, también los epígrafes parecidos (por ejemplo `Comunitat Valenciana. Convenio`, que no está en el listado), los elementos sin epígrafe y epígrafes como indultos, premios, títulos nobiliarios, recursos, condecoraciones, fundaciones, reales academias o sentencias.
+2. **Filtro de tratamientos personales**, el mismo de la sección I (`don`, `doña`, `D.`, `D.ª`, `Dª`, `Dña`).
+3. **Filtro de adjudicaciones y personas.** Se descarta el título que contiene alguna de estas expresiones, sin distinguir mayúsculas: `se conceden`, `se concede`, `concesión de los premios`, `a favor de`, `interpuesto por`, `se emplaza`, `beneficiari`, `adjudica` o `relación de`. Así se conservan las convocatorias, las bases y los convenios, y se descartan las listas de premiados o adjudicatarios.
+4. **Documentos de identidad.** Se descarta el título que contiene algo con la forma de un DNI (ocho cifras y una letra), de un NIE (X, Y o Z, siete cifras y una letra) o de un DNI enmascarado (`***1234**`).
+
+Como en la sección I, solo se guardan metadatos y enlaces a `www.boe.es`: nunca el texto íntegro ni los anexos. En el registro de la ejecución solo aparecen los **recuentos** de lo descartado por el listado y por los filtros, nunca los títulos.
+
+Límites, con toda claridad:
+
+- **El filtro puede no detectar un nombre.** Es un filtro de texto sencillo, no entiende el contenido: un título de un epígrafe admitido que nombre a una persona de una forma que ninguna de las reglas anteriores reconoce (por ejemplo, el nombre de un autónomo que figura como razón social) pasará. Y puede descartar elementos que no tenían ningún problema.
+- **No sustituye a una revisión.** Si vas a tratar, publicar o cruzar estos datos, el tratamiento posterior es **responsabilidad tuya**, incluido el cumplimiento del RGPD, de la LOPDGDD y de las condiciones de reutilización del BOE. Si usas la sección III, revisa lo que obtienes antes de difundirlo.
+- **Es opcional**: si no la necesitas, déjala desactivada.
+- El listado se amplía solo mediante un cambio revisado del Actor. Si ves en un resultado un título que nombra a una persona, avísanos en la dirección de [Contacto](#contacto) y los filtros se actualizarán en un plazo máximo de 7 días.
+- El `normType` de estos elementos también se deriva del título y suele ser `Resolución` u `Otro`. Los filtros `departments`, `keywords` y `normTypes` se aplican igual.
+- `onlyNew` guarda una memoria distinta cuando la sección III está activada, de modo que activarla no oculta nada ni mezcla lo ya entregado.
+
 ## Vista de tabla en la consola de Apify
 
 Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra una tabla con la vista **Resumen**: fecha, tipo de norma (derivado), departamento, título, enlace al PDF y enlace «Ver en el BOE». La vista **Todos los campos** muestra los 12 campos y `normType`, con los enlaces como enlaces. Las vistas solo cambian cómo se ve el resultado en la consola; los datos que descargas (JSON, CSV…) y la API no cambian.
@@ -163,7 +188,7 @@ Una disposición completa en JSON: son datos reales del BOE del 16 de octubre de
 Con `onlyNew: true`, el Actor omite las disposiciones que ya entregó en ejecuciones anteriores de tu cuenta. Está pensado para ejecuciones programadas (por ejemplo, una al día).
 
 - Recuerda los identificadores en el almacén clave-valor con nombre `SEEN`, de tu propia cuenta de Apify.
-- Mantiene **una memoria por cada combinación de filtros** (`departments`, `keywords` y, solo si lo usas, `normTypes`): dos configuraciones distintas no se ocultan elementos entre sí. El orden de las entradas y las mayúsculas no cuentan. Quien no usa `normTypes` conserva la memoria que ya tenía.
+- Mantiene **una memoria por cada combinación de filtros** (`departments`, `keywords` y, solo si los usas, `normTypes` y la sección III): dos configuraciones distintas no se ocultan elementos entre sí. El orden de las entradas y las mayúsculas no cuentan. Quien no usa `normTypes` ni la sección III conserva la memoria que ya tenía.
 - Cada memoria guarda hasta **50 000** identificadores; al superarlos se olvidan los más antiguos.
 - Solo se recuerdan los elementos **realmente entregados**: los que quedan fuera por los filtros o por `maxItems` se podrán entregar en una ejecución posterior.
 - Con `onlyNew: false` no se lee ni se escribe `SEEN`.
@@ -180,7 +205,7 @@ Desde la versión 1.2 puedes recibir un resumen de lo que entrega cada ejecució
 - **Slack (`slackWebhookUrl`).** Se envían como máximo 10 mensajes por ejecución, con una pausa entre ellos.
 - **Cuándo se avisa.** Solo si la ejecución entrega al menos un elemento, salvo que actives `notifyWhenEmpty`.
 - **Si un aviso falla.** La ejecución termina con código de salida `3` y el mensaje de estado indica qué canal falló (por ejemplo «Slack: error http-404»). Con avisos configurados y `onlyNew`, la memoria `SEEN` se actualiza **al final y solo si todos los avisos salieron bien**: como `SEEN` no se guarda, **todos los elementos de la ejecución** se entregarán de nuevo en la siguiente y se **reenviarán a todos los canales**, también a los que sí funcionaron. El conjunto de datos de la ejecución fallida sí los contiene. Un canal que sigue fallando (por ejemplo, un webhook de Slack revocado) hace que cada ejecución programada reenvíe la lista acumulada (hasta 10 mensajes por canal) y termine con código `3` hasta que lo arregles o vacíes ese campo.
-- **Privacidad.** Los campos secretos (`emailTo`, `telegramBotToken` y `slackWebhookUrl`) usan la entrada secreta de Apify, que los guarda cifrados. El Actor no los escribe en el registro, en el mensaje de estado, en el conjunto de datos ni en `SEEN`; en caso de error solo registra el nombre del error y el estado HTTP. Los mensajes llevan solo los metadatos de la sección I y los enlaces a `www.boe.es`, con la línea de fuente y el aviso de que no son un texto oficial. La dirección de correo y el resumen quedan guardados en texto plano en la entrada de la ejecución de `apify/send-mail`, dentro de tu propia cuenta de Apify, fuera del cifrado de la entrada secreta de NormaWatch. Si publicas el resumen en un canal público, lo estás publicando tú.
+- **Privacidad.** Los campos secretos (`emailTo`, `telegramBotToken` y `slackWebhookUrl`) usan la entrada secreta de Apify, que los guarda cifrados. El Actor no los escribe en el registro, en el mensaje de estado, en el conjunto de datos ni en `SEEN`; en caso de error solo registra el nombre del error y el estado HTTP. Los mensajes llevan solo los metadatos de la sección I (y de la III, si la activas) y los enlaces a `www.boe.es`, con la línea de fuente y el aviso de que no son un texto oficial. La dirección de correo y el resumen quedan guardados en texto plano en la entrada de la ejecución de `apify/send-mail`, dentro de tu propia cuenta de Apify, fuera del cifrado de la entrada secreta de NormaWatch. Si publicas el resumen en un canal público, lo estás publicando tú.
 
 ## Precio y límites
 
@@ -235,7 +260,8 @@ El registro contiene solo recuentos, fechas y estados, nunca títulos ni conteni
 ### ¿Qué no hace?
 
 - No incluye el texto íntegro de las disposiciones: solo metadatos y enlaces. Para leer el texto, usa los enlaces que devuelve.
-- No lee otras secciones del BOE (II, III, IV, V…) ni otros boletines.
+- No lee otras secciones del BOE (II, IV, V…) ni otros boletines. De la sección III solo lee, si la activas, los epígrafes del listado y con los filtros descritos; no lee anexos ni textos íntegros, e indultos, premios, nombramientos y otros epígrafes con personas quedan fuera siempre.
+- No garantiza que la sección III esté libre de datos personales: su filtro puede no detectar un nombre (ver [Sección III](#sección-iii-opcional)).
 - No sustituye al BOE: el texto oficial y con validez es el que publica la Agencia.
 - No guarda datos fuera de tu propio almacenamiento de Apify (los avisos solo envían el resumen a los canales que configures).
 
@@ -299,14 +325,15 @@ NormaWatch no es un servicio oficial del BOE ni de la AEBOE. La Agencia Estatal 
 
 ## Datos personales
 
-El Actor no trata datos personales a propósito. Para evitarlo, aplica dos controles:
+El Actor no trata datos personales a propósito. Para evitarlo, aplica estos controles:
 
-- **Solo la sección I** (disposiciones generales), y solo metadatos y enlaces: nunca el texto íntegro, que es donde figuran los nombres de los firmantes.
+- **Por defecto, solo la sección I** (disposiciones generales), y solo metadatos y enlaces: nunca el texto íntegro, que es donde figuran los nombres de los firmantes.
 - **Filtro de nombres**: se descarta cualquier título que contenga un tratamiento personal (`don`, `doña`, `D.`, `D.ª`, `Dª`, `Dña`) seguido de un espacio. Ante la duda, se descarta. En el registro solo queda el recuento de lo descartado, nunca el contenido.
+- **Sección III, solo si la activas**: listado cerrado de epígrafes, filtro de adjudicaciones y personas y filtro de documentos de identidad, además del filtro de nombres (ver [Sección III](#sección-iii-opcional)). Estos filtros **reducen el riesgo pero no lo eliminan**: pueden no detectar un nombre dentro de un título admitido, y quien activa la opción es responsable del tratamiento posterior de los datos, incluido el cumplimiento del RGPD.
 
 El Actor no guarda datos fuera de tu propio almacenamiento de Apify (conjunto de datos de la ejecución y, si lo activas, el almacén `SEEN`, que contiene solo identificadores del BOE).
 
-Si activas los avisos, los datos que tú aportas (tu dirección de correo, el identificador del chat de Telegram, el token del bot o el webhook de Slack) se usan solo para enviar el resumen: el autor del Actor no los ve ni los recibe, Apify los trata como proveedor de tu cuenta, y el Actor no los escribe en el registro ni en ningún resultado. El resumen se envía a los servicios que elijas (Apify para el correo, Telegram, Slack) y contiene solo metadatos de la sección I.
+Si activas los avisos, los datos que tú aportas (tu dirección de correo, el identificador del chat de Telegram, el token del bot o el webhook de Slack) se usan solo para enviar el resumen: el autor del Actor no los ve ni los recibe, Apify los trata como proveedor de tu cuenta, y el Actor no los escribe en el registro ni en ningún resultado. El resumen se envía a los servicios que elijas (Apify para el correo, Telegram, Slack) y contiene solo metadatos de la sección I (y de la III, si la activas).
 
 ## Mantenimiento
 

@@ -6,6 +6,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.4.0] - 2026-10-20
+
+### Añadido
+
+- Sección III del BOE («Otras disposiciones») como opción, **desactivada por defecto**: el campo `sections` (selector con `"1"` y `"3"`) permite añadirla. Sin él, una ejecución devuelve exactamente lo mismo que en la 1.3.
+- Con la sección III activada solo se incluyen los elementos de un listado cerrado de 14 epígrafes (`Convenios`, `Encomienda de gestión`, `Delegación de competencias`, `Planes de estudios`, `Cartas de servicios`, `Subvenciones`, `Ayudas`, `Becas`, `Impacto ambiental`, `Instalaciones eléctricas`, `Homologaciones`, `Normalización`, `Mercado de divisas` y `Convenios colectivos de trabajo`), con comparación exacta, sin distinguir mayúsculas y en NFC.
+- Filtro de adjudicaciones y personas para la sección III: se descartan los títulos con expresiones de adjudicación o de persona concreta (`se conceden`, `a favor de`, `interpuesto por`, `adjudica`, `relación de`…) y los que contienen un DNI, un NIE o un DNI enmascarado. También rige el filtro de tratamientos personales de siempre.
+- El campo `section` vale `"3"` en los elementos de la sección III; sin la opción sigue valiendo siempre `"1"`.
+- El registro añade, solo con la sección III activada, los recuentos de lo descartado por el listado y por el filtro, nunca títulos.
+- La clave de `SEEN` y la huella de reanudación incluyen las secciones solo cuando se activa la III, de modo que la memoria de quien no la usa no cambia y la de quien la activa no se mezcla con la anterior.
+- README: nueva sección «Sección III (opcional)» con el listado, los filtros y sus límites, y las preguntas y la sección de datos personales actualizadas.
+
+### Cambiado
+
+- El `User-Agent` pasa a `normawatch-boe/1.4`.
+
 ## [1.3.0] - 2026-10-20
 
 ### Añadido
