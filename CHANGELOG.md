@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.5.2] - 2026-10-20
+
+### Documentación
+
+- README: sección «In English» con un resumen en inglés (qué hace, para quién, opciones principales, gratuito y sin carácter oficial) para dar más alcance al Actor en la tienda de Apify. El resto de la documentación sigue en castellano.
+
 ## [1.5.1] - 2026-10-20
 
 ### Cambiado

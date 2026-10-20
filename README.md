@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.1-1636B5?style=flat" alt="Versión 1.5.1"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.2-1636B5?style=flat" alt="Versión 1.5.2"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -16,8 +16,19 @@
 
 > Basado en datos de la [Agencia Estatal Boletín Oficial del Estado](https://www.boe.es) y, si lo eliges, de la Junta de Andalucía (BOJA, CC BY 4.0) y la Xunta de Galicia (DOG, CC BY-SA 4.0; ver [Boletines autonómicos](#boletines-autonómicos)). Este Actor no es un servicio oficial del BOE ni de la AEBOE, y su resultado no es un texto oficial. La Agencia no participa en este Actor, ni lo patrocina, ni lo respalda. Ni la Junta de Andalucía ni la Xunta de Galicia participan en este proyecto ni lo respaldan.
 
+## In English
+
+**NormaWatch** is a Spain official gazette API in the form of an Apify Actor. It lists the new general provisions (Section I) of Spain's Official State Gazette (BOE, Boletín Oficial del Estado) and, optionally, of the BOJA (Andalusia) and DOG (Galicia) regional gazettes, every day, as JSON and as a table in the Apify console. Each item carries metadata and official links only, never the full text.
+
+It suits Spanish legislation monitoring and regulatory alerts for Spain: compliance teams, law firms, journalists and developers who feed their own alerts or dashboards with a BOE API.
+
+Key options: a date range of up to one year, filters by department, title keywords and norm type, `onlyNew` for daily scheduled runs that return only what you have not received before, and optional e-mail, Telegram or Slack notices.
+
+It is free: no price and no subscription. It is not an official BOE or AEBOE service, and its output is not an official text. The full documentation below is in Spanish.
+
 ## Contenido
 
+- [In English](#in-english)
 - [Qué hace](#qué-hace)
 - [Para quién es](#para-quién-es)
 - [Cómo usarlo](#cómo-usarlo)
