@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.6.0-1636B5?style=flat" alt="Versión 1.6.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.7.0-1636B5?style=flat" alt="Versión 1.7.0"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -24,6 +24,8 @@ It suits Spanish legislation monitoring and regulatory alerts for Spain: complia
 
 Since 1.6, the optional `relations` and `followIds` settings tell you which laws each BOE provision repeals, amends or replaces (based on data from the Agencia Estatal Boletín Oficial del Estado; the links to consolidated texts are informational only, not official), and let you follow specific laws by their BOE id.
 
+Since 1.7, the optional Section II-B ("Oposiciones y concursos", public-sector job calls) can be added with `sections: ["2B"]`: by default only the calls (convocatorias) are delivered, and `includeProcessUpdates` adds the follow-up notices (admitted lists, tribunals, corrections). The `stage` field is derived from the title and is a hint, not an official datum. Section II-A (appointments) is never read, and no document text is fetched.
+
 Key options: a date range of up to one year, filters by department, title keywords and norm type, `onlyNew` for daily scheduled runs that return only what you have not received before, and optional e-mail, Telegram or Slack notices.
 
 It is free: no price and no subscription. It is not an official BOE or AEBOE service, and its output is not an official text. The full documentation below is in Spanish.
@@ -38,6 +40,7 @@ It is free: no price and no subscription. It is not an official BOE or AEBOE ser
 - [Salida](#salida)
 - [Tipo de norma (derivado)](#tipo-de-norma-derivado)
 - [Sección III (opcional)](#sección-iii-opcional)
+- [Oposiciones (sección II-B)](#oposiciones-sección-ii-b)
 - [Boletines autonómicos](#boletines-autonómicos)
 - [Qué cambia cada disposición (relations)](#qué-cambia-cada-disposición-relations)
 - [Vista de tabla en la consola de Apify](#vista-de-tabla-en-la-consola-de-apify)
@@ -90,7 +93,8 @@ Todos los campos son opcionales. Una entrada vacía devuelve las disposiciones d
 | `departments` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su departamento contiene alguno de los textos (sin distinguir mayúsculas; texto literal, no expresión regular). |
 | `keywords` | lista de textos | sin filtro | Máximo 50 entradas de 200 caracteres cada una. Se conserva el elemento si su título contiene alguno de los textos (sin distinguir mayúsculas; texto literal). |
 | `normTypes` | lista de tipos de norma | sin filtro (todos los tipos) | Selector múltiple. Valores admitidos, tal como los escribe el BOE: `Corrección de errores`, `Instrumento de ratificación`, `Real Decreto Legislativo`, `Real Decreto-ley`, `Real Decreto`, `Ley Orgánica`, `Ley Foral`, `Ley`, `Decreto Legislativo`, `Decreto-ley`, `Decreto`, `Orden`, `Resolución`, `Circular`, `Acuerdo internacional` y `Otro`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Tipo de norma](#tipo-de-norma-derivado). |
-| `sections` | lista de secciones | `["1"]` (solo la sección I) | Selector múltiple con `"1"` (disposiciones generales) y `"3"` (otras disposiciones, restringida y con filtros). Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Sección III](#sección-iii-opcional). |
+| `sections` | lista de secciones | `["1"]` (solo la sección I) | Selector múltiple con `"1"` (disposiciones generales), `"2B"` (oposiciones y concursos, desde la 1.7) y `"3"` (otras disposiciones, restringida y con filtros). Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Oposiciones](#oposiciones-sección-ii-b) y [Sección III](#sección-iii-opcional). |
+| `includeProcessUpdates` | verdadero o falso | `false` | Desde la 1.7. Solo tiene efecto con la sección II-B: por defecto se entregan solo las convocatorias; con `true`, también las actualizaciones y los elementos sin fase reconocida. Ver [Oposiciones](#oposiciones-sección-ii-b). |
 | `bulletins` | lista de boletines | `["BOE"]` | Selector múltiple con `"BOE"`, `"BOJA"` y `"DOG"`. Un valor distinto hace fallar la ejecución con código de salida 2. Ver [Boletines autonómicos](#boletines-autonómicos). |
 | `relations` | verdadero o falso | `false` | Desde la 1.6. Lee, para cada disposición de la sección I del BOE, qué normas deroga, modifica, sustituye… Una petición más por disposición. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
 | `followIds` | lista de textos | sin lista | Desde la 1.6. Máximo 100 identificadores del BOE con la forma `BOE-A-AAAA-N`; se recortan, se pasan a mayúsculas y se unifican los repetidos. Activa `relations` y entrega, aunque los filtros las dejaran fuera, las disposiciones que cambian alguna de esas normas. Un valor no válido hace fallar la ejecución con código de salida 2. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
@@ -137,6 +141,7 @@ Cada elemento del conjunto de datos tiene estos 12 campos, más el campo derivad
 | `retrievedAt` | Campo derivado: momento (ISO 8601, UTC) en que el Actor obtuvo el dato. No procede del BOE. |
 | `source` | Línea de fuente: `Fuente de los datos: Agencia Estatal Boletín Oficial del Estado`. |
 | `sourceUrl` | `https://www.boe.es`. |
+| `stage` | Desde la versión 1.7 y solo en la sección II-B: `convocatoria`, `actualizacion` u `otro`, derivada del título (una pista, no un dato oficial). Ver [Oposiciones](#oposiciones-sección-ii-b). |
 | `changes` | Desde la versión 1.6 y solo con `relations` (o `followIds`), en la sección I del BOE: lista de normas que la disposición cambia. Ver [Qué cambia cada disposición](#qué-cambia-cada-disposición-relations). |
 | `changesStatus` | Desde la versión 1.6 y solo con `relations`: `ok`, `pending`, `error` o `skipped`. |
 | `followed` | Desde la versión 1.6 y solo con `followIds`: los identificadores seguidos que la disposición cambia (lista vacía si ninguno). |
@@ -192,6 +197,19 @@ Límites, con toda claridad:
 - El `normType` de estos elementos también se deriva del título y suele ser `Resolución` u `Otro`. Los filtros `departments`, `keywords` y `normTypes` se aplican igual.
 - `onlyNew` guarda una memoria distinta cuando la sección III está activada, de modo que activarla no oculta nada ni mezcla lo ya entregado.
 
+## Oposiciones (sección II-B)
+
+Desde la versión 1.7 puedes añadir la **sección II-B** del BOE («II. Autoridades y personal. B. Oposiciones y concursos»): convocatorias de oposiciones y concursos de personal funcionario y laboral, sobre todo de administración local y universidades. Está **desactivada por defecto**. Para activarla, indica `"sections": ["2B"]` (o `["1", "2B"]` si también quieres la sección I). Cada elemento lleva `"section": "2B"` y el campo `stage`.
+
+- **Por defecto, solo convocatorias.** Se entregan los elementos cuyo título anuncia una convocatoria (`se convoca`, `proceso selectivo`, `referente a la convocatoria`, `publica la convocatoria`, `anuncia convocatoria`, `bases de la convocatoria`, `provisión de puestos`). Con `"includeProcessUpdates": true` se entregan además las **actualizaciones** (relaciones provisionales o definitivas de admitidos y excluidos, tribunal, convocatorias desiertas, correcciones de errores, listas de aprobados, nombramientos) y los elementos sin fase reconocida (`otro`). Ejemplo de entrada: `{"sections": ["2B"], "departments": ["administración local"], "includeProcessUpdates": false}`.
+- **La fase es una pista.** `stage` (`convocatoria`, `actualizacion` u `otro`) la deriva este Actor del título, sin distinguir mayúsculas ni tildes; no es un dato oficial y puede equivocarse en títulos poco habituales. Con `includeProcessUpdates` aumenta la probabilidad de que aparezcan títulos que se refieren a personas concretas (nombramientos, recursos); se descartan los que llevan tratamientos personales, documentos de identidad o expresiones como «a favor de» o «interpuesto por», pero el filtro no es infalible. Si un título encaja en una actualización y en una convocatoria (por ejemplo, «se aprueba la relación de admitidos en el proceso selectivo»), cuenta como actualización.
+- **Lo que nunca se lee.** La sección II-A (nombramientos y ceses de personas) no se lee nunca, y no se pide ningún documento: solo metadatos y enlaces a `www.boe.es` del sumario, nunca el texto ni el contenido de las listas de admitidos o aprobados.
+- **Filtro de nombres.** Se aplica el mismo filtro de tratamientos personales de la sección I (`don`, `doña`, `D.`, `D.ª`, `Dª`, `Dña`). Los títulos que lo activan se descartan y se cuentan. Es un filtro de texto sencillo: puede descartar algún título sin problema. Un «Don» o «Doña» dentro del nombre de un municipio tras «Ayuntamiento de» (por ejemplo, «Puebla de Don Fadrique (Granada)») no lo activa si el nombre va seguido de «(» o «,», es corto, no contiene palabras como «por», «que» o «nombra» y el tratamiento va con mayúscula justo detrás de «de» o «del», seguido solo de palabras con mayúscula hasta el final del nombre; un tratamiento al principio del nombre o detrás de otra palabra («Ayuntamiento de Valencia don …») hace que el título se descarte, y ante la duda también. Límite: una persona escrita como «Ayuntamiento de X de Don Nombre Apellido (» no se distingue de un municipio como «Valencia de Don Juan (León)» y no se descarta. Los títulos observados son institucionales, pero el filtro no garantiza la ausencia de datos personales y el tratamiento posterior es responsabilidad tuya.
+- **Volumen.** Unas 35 disposiciones al día en total, de las que la gran mayoría son convocatorias. `maxItems` y los avisos las acotan igual que en las demás secciones; los filtros `departments`, `keywords` y `normTypes` funcionan igual. La opción `relations` no se aplica a la sección II-B.
+- **Registro.** Solo aparecen recuentos: elementos descartados por el filtro de nombres y actualizaciones u otros omitidos por fase, nunca títulos.
+- `onlyNew` guarda una memoria distinta cuando la sección II-B está activada, y otra si además se activa `includeProcessUpdates`.
+- En los avisos, las oposiciones salen agrupadas por departamento con la etiqueta «Oposiciones» y, si no son convocatorias, su fase.
+
 ## Boletines autonómicos
 
 Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales** de dos boletines autonómicos con el campo `bulletins`. Por defecto vale `["BOE"]` y una ejecución sin el campo devuelve lo mismo que en la 1.4, con un campo más (`bulletin: "BOE"`). Ejemplo: `"bulletins": ["BOE", "BOJA", "DOG"]`.
@@ -217,9 +235,9 @@ Desde la versión 1.5 puedes leer, junto al BOE, las **disposiciones generales**
 ### Límites
 
 - BOJA: una petición por fecha (hasta 200 elementos por página, como máximo 5 páginas), con la lista de campos cerrada: no se pide nunca el texto íntegro ni HTML. Un día sin boletín no es un error.
-- DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida. **El DOG sirve para ejecuciones diarias programadas, no para recuperar historial**: los días pasados devuelven siempre cero elementos. Se pide una sola vez por ejecución.
+- DOG: el RSS solo contiene el **último número** con disposiciones generales, no admite una fecha. Un día se lee si la fecha del RSS coincide con la pedida. **El DOG sirve para ejecuciones diarias programadas, no para recuperar historial**: los días pasados devuelven siempre cero elementos; el registro de la ejecución lo avisa (una sola vez, con la fecha del número que trae el RSS y cuántas fechas pedidas no se pueden consultar). Se pide una sola vez por ejecución.
 - El DOG se pide una vez por ejecución y, si el RSS no responde (también con un 404), fallan solo los días del DOG.
-- Pausa mínima, `User-Agent` identificado (`normawatch-boe/1.6 (+https://github.com/saidcveltran/normawatch-boe)`), sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
+- Pausa mínima, `User-Agent` identificado (`normawatch-boe/1.7 (+https://github.com/saidcveltran/normawatch-boe)`), sin seguir redirecciones, tope de tamaño de respuesta y tiempo máximo por petición, igual que con el BOE.
 
 ### Licencias y atribución
 
@@ -282,7 +300,7 @@ Con `followIds` el Actor marca en `followed` las disposiciones que cambian algun
 
 ## Vista de tabla en la consola de Apify
 
-Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra una tabla con la vista **Resumen**: fecha, tipo de norma (derivado), departamento, título, enlace al PDF y enlace «Ver en el BOE». La vista **Todos los campos** muestra los campos base, `normType` y, con las opciones de relaciones, `bulletin`, `changes`, `changesStatus` y `followed`, con los enlaces como enlaces. Las vistas solo cambian cómo se ve el resultado en la consola; los datos que descargas (JSON, CSV…) y la API no cambian.
+Desde la versión 1.1, la pestaña de resultados de la consola de Apify muestra una tabla con la vista **Resumen**: fecha, tipo de norma (derivado), departamento, título, enlace al PDF y enlace «Ver en el BOE». La vista **Todos los campos** muestra los campos base, `normType`, `stage` (solo en la sección II-B) y, con las opciones de relaciones, `bulletin`, `changes`, `changesStatus` y `followed`, con los enlaces como enlaces. Las vistas solo cambian cómo se ve el resultado en la consola; los datos que descargas (JSON, CSV…) y la API no cambian.
 
 ## Ejemplo de resultado
 

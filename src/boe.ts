@@ -18,6 +18,7 @@ import type { RunInput } from "./input.ts";
 import type { Notifier } from "./notify.ts";
 import { DOCUMENT_ID, MAX_CONSECUTIVE_RELATION_ERRORS, MAX_RELATION_HTTP_ATTEMPTS, MAX_RELATION_REQUESTS, MAX_TOTAL_RELATION_ERRORS, followedBy, parseRelations } from "./relations.ts";
 import type { RelationsFetch } from "./relations.ts";
+import { dogFeedDate } from "./sources/dog.ts";
 import { adapterFor } from "./sources/index.ts";
 import type { Bulletin } from "./sources/index.ts";
 
@@ -47,6 +48,8 @@ export type RunDeps = {
   log: {
     info: (message: string, data?: Record<string, unknown>) => void;
     error: (message: string, data?: Record<string, unknown>) => void;
+    // Avisos que no cambian el resultado; si falta, se registran como información.
+    warn?: (message: string, data?: Record<string, unknown>) => void;
   };
   // Memoria de elementos ya entregados; solo se consulta y se actualiza si la entrada trae onlyNew.
   seen?: {
@@ -107,6 +110,8 @@ export function inputFingerprint(input: RunInput): string {
     // Las relaciones y las normas seguidas (1.6) entran solo cuando se usan; followIds ya llega ordenado.
     ...(input.relations === true ? { relations: true } : {}),
     ...(input.followIds !== undefined && input.followIds.length > 0 ? { followIds: input.followIds } : {}),
+    // Las actualizaciones de oposiciones (1.7) entran solo cuando se piden.
+    ...(input.includeProcessUpdates === true ? { includeProcessUpdates: true } : {}),
   });
   return createHash("sha256").update(canonical).digest("hex");
 }
@@ -345,6 +350,9 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
     rel.totalErrors++;
     return withRelations(it, "error", []);
   };
+  // DOG: fechas pedidas que el RSS (solo el último número) no cubre; se avisa una vez al final.
+  let dogFeed: string | undefined;
+  let dogUncovered = 0;
   let executed = false;
   for (let t = start; t < total && summary.stored < input.maxItems; t++) {
     const date = input.dates[Math.floor(t / B)]!;
@@ -365,8 +373,15 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
         await checkpoint(t + 1);
         continue;
       }
-      const parsed = await guardSource(multi, async () => adapterFor(bulletin).parseDay(result.body, date, deps.now(), input.sections));
+      const parsed = await guardSource(multi, async () => adapterFor(bulletin).parseDay(result.body, date, deps.now(), input.sections, input.includeProcessUpdates === true));
       const { dropped } = parsed;
+      if (bulletin === "DOG") {
+        const feed = dogFeedDate(result.body);
+        if (feed !== undefined) {
+          dogFeed = feed;
+          if (feed !== date) dogUncovered++;
+        }
+      }
       // Con followIds, todos los elementos de la sección I del BOE se consultan aunque los filtros los dejen fuera: solo
       // se entregan si cambian una norma seguida. Sin followIds el filtrado es el de siempre.
       const bypass = new Set<OutputItem>();
@@ -481,6 +496,10 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
         return summary;
       }
     }
+  }
+  if (dogUncovered > 0 && dogFeed !== undefined) {
+    const msg = `DOG: el RSS solo trae el número del ${dogFeed}; ${dogUncovered === 1 ? "1 fecha pedida no se puede consultar" : `${dogUncovered} fechas pedidas no se pueden consultar`} en esta fuente.`;
+    (deps.log.warn ?? deps.log.info)(msg, { bulletin: "DOG", rssDate: dogFeed, uncoveredDates: dogUncovered });
   }
   if (summary.stored >= input.maxItems) deps.log.info("Alcanzado maxItems", { maxItems: input.maxItems });
   if (input.relations === true) {

@@ -3,7 +3,7 @@
 // y solo fechas validadas; este módulo no compone ninguna URL.
 import { BoeError, errName } from "./errors.ts";
 
-export const USER_AGENT = "normawatch-boe/1.6 (+https://github.com/saidcveltran/normawatch-boe)";
+export const USER_AGENT = "normawatch-boe/1.7 (+https://github.com/saidcveltran/normawatch-boe)";
 
 export const TIMEOUT_MS = 30_000;
 export const MAX_BYTES = 4 * 1024 * 1024;

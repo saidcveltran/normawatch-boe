@@ -1,6 +1,6 @@
 {
   "name": "normawatch-boe",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Las nuevas disposiciones generales del BOE, y si quieres del BOJA y el DOG, cada día en JSON y en tabla, con aviso opcional por correo, Telegram o Slack. Solo metadatos y enlaces oficiales. Gratis.",
   "private": true,
   "type": "module",

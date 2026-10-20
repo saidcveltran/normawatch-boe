@@ -1,6 +1,6 @@
 {
   "title": "Entrada de NormaWatch",
-  "description": "Elige las fechas de publicación del BOE y los filtros opcionales. Por defecto solo se lee la sección I (disposiciones generales); la sección III (otras disposiciones) es opcional y está restringida.",
+  "description": "Elige las fechas de publicación del BOE y los filtros opcionales. Por defecto solo se lee la sección I (disposiciones generales); la sección III (otras disposiciones) y la II-B (oposiciones y concursos) son opcionales.",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
@@ -82,15 +82,21 @@
     "sections": {
       "title": "Secciones del BOE",
       "type": "array",
-      "description": "Por defecto solo se lee la sección I (disposiciones generales). Si añades la sección III (otras disposiciones), se incluyen únicamente los elementos de un listado cerrado de epígrafes (convenios, ayudas, subvenciones, becas, planes de estudios, impacto ambiental, homologaciones y similares) y se descartan los títulos de adjudicaciones, los que llevan un tratamiento personal (don, doña…) y los que contienen un documento de identidad. Esos filtros reducen el riesgo de datos personales pero no lo eliminan: el filtro puede no detectar un nombre propio dentro de un título admitido, y el tratamiento posterior de los datos (incluido el cumplimiento del RGPD) es de tu responsabilidad. Con la sección III activada la memoria de onlyNew es distinta de la de antes. Máximo 2 entradas.",
+      "description": "Por defecto solo se lee la sección I (disposiciones generales). Si añades la sección III (otras disposiciones), se incluyen únicamente los elementos de un listado cerrado de epígrafes (convenios, ayudas, subvenciones, becas, planes de estudios, impacto ambiental, homologaciones y similares) y se descartan los títulos de adjudicaciones, los que llevan un tratamiento personal (don, doña…) y los que contienen un documento de identidad. Esos filtros reducen el riesgo de datos personales pero no lo eliminan: el filtro puede no detectar un nombre propio dentro de un título admitido, y el tratamiento posterior de los datos (incluido el cumplimiento del RGPD) es de tu responsabilidad. Con la sección III activada la memoria de onlyNew es distinta de la de antes. La sección II-B (oposiciones y concursos, unas 35 disposiciones al día) entrega por defecto solo las convocatorias; ver includeProcessUpdates. La sección II-A (nombramientos) nunca se lee. Máximo 3 entradas.",
       "editor": "select",
       "default": ["1"],
-      "maxItems": 2,
+      "maxItems": 3,
       "items": {
         "type": "string",
-        "enum": ["1", "3"],
-        "enumTitles": ["I. Disposiciones generales", "III. Otras disposiciones (opcional, con filtros)"]
+        "enum": ["1", "2B", "3"],
+        "enumTitles": ["I. Disposiciones generales", "II-B. Oposiciones y concursos", "III. Otras disposiciones (opcional, con filtros)"]
       }
+    },
+    "includeProcessUpdates": {
+      "title": "Incluir también los trámites de las oposiciones",
+      "type": "boolean",
+      "description": "Solo tiene efecto con la sección II-B. Por defecto (desactivado) se entregan solo las convocatorias. Si lo activas, se entregan también las actualizaciones (listas de admitidos y excluidos, tribunal, plazas desiertas, correcciones de errores, listas de aprobados, nombramientos) y los elementos sin fase reconocida. La fase (campo stage) la deriva este Actor del título: es una pista, no un dato oficial. Con esta opción la memoria de onlyNew es distinta de la de antes.",
+      "default": false
     },
     "bulletins": {
       "title": "Boletines",

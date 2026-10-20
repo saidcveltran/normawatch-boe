@@ -2,6 +2,7 @@
 // de tratamientos personales y los ayudantes de lectura. Solo biblioteca estándar. Cada fuente (sources/*.ts)
 // conserva únicamente metadatos y enlaces; nunca texto íntegro ni nombres de firmantes.
 import type { NormType } from "./classify.ts";
+import type { Stage } from "./oposiciones.ts";
 
 export const MAX_TEXT = 2000;
 
@@ -9,20 +10,21 @@ export const MAX_TEXT = 2000;
 // No se usa \b porque no reconoce bien las letras acentuadas ni la ñ. La mirada atrás excluye letras y
 // puntos, de modo que abreviaturas como "R.D. 123/2026" no se confunden con un tratamiento; los casos
 // ambiguos se descartan igualmente, porque ante la duda prima la protección de datos personales.
-const NAME_GUARD = /(?<![\p{L}.])(?:don|doña|d\.ª|dª|dña\.?|d\.)(?=\s)/iu;
+const NAME_GUARD = /(?<![\p{L}.])(?:don|doña|d\.ª\.?|dª\.?|d\.a|dña\.?|d\.)(?=\s)/iu;
 // Caracteres de formato invisibles (categoría Cf): guion blando U+00AD, marcas de dirección, controles
 // bidireccionales, ancho cero, U+2060-2064 y la marca de orden de bytes.
 const INVISIBLE = /\p{Cf}/gu;
 
-// Texto que se somete al filtro: normalizado a NFC y sin caracteres invisibles. Solo sirve para la
-// comprobación; el título que se guarda no se modifica.
+// Texto que se somete al filtro: normalizado a NFKC (formas de ancho completo y de compatibilidad) y sin
+// caracteres invisibles. Solo sirve para la comprobación; el título que se guarda no se modifica.
 export function guardText(v: string): string {
-  return v.normalize("NFC").replace(INVISIBLE, "");
+  return v.normalize("NFKC").replace(INVISIBLE, "");
 }
 
 // Verdadero si el título lleva un tratamiento personal («don», «doña», «D.», …): se descarta en todas las fuentes.
+// NFKC lleva «ª» a «a» («D.ª» pasa a «D.a»), por eso se comprueba también la forma NFC, donde «dª» sigue entero.
 export function nameGuardHit(title: string): boolean {
-  return NAME_GUARD.test(guardText(title));
+  return NAME_GUARD.test(guardText(title)) || NAME_GUARD.test(title.normalize("NFC").replace(INVISIBLE, ""));
 }
 
 // Una relación del documento con otra norma (opción relations, solo BOE sección I).
@@ -45,7 +47,7 @@ export type ChangesStatus = "ok" | "pending" | "error" | "skipped";
 export type OutputItem = {
   id: string;
   date: string;
-  // BOE: "1" o, solo si el usuario activa la sección III, "3". Boletines autonómicos: la etiqueta de su sección.
+  // BOE: "1" o, solo si el usuario las activa, "2B" (oposiciones) o "3". Boletines autonómicos: la etiqueta de su sección.
   section: string;
   department: string;
   epigraph: string;
@@ -60,6 +62,8 @@ export type OutputItem = {
   normType: NormType;
   // Boletín de origen: "BOE", "BOJA" o "DOG".
   bulletin: string;
+  // Solo en la sección II-B (oposiciones): fase derivada del título; una pista de este Actor, no un dato oficial.
+  stage?: Stage;
   // Solo con la opción relations y solo en la sección I del BOE.
   changes?: Change[];
   changesStatus?: ChangesStatus;
@@ -79,6 +83,9 @@ export type Dropped = {
   personGuard?: number;
   // Solo en los boletines autonómicos: elementos que no son de disposiciones generales.
   otherSection?: number;
+  // Solo con la sección II-B: actualizaciones y elementos sin fase reconocida que no se entregan por defecto.
+  updatesOmitted?: number;
+  othersOmitted?: number;
 };
 
 type Obj = Record<string, unknown>;
@@ -156,10 +163,28 @@ export function dropMessages(dropped: Dropped, label: string = "BOE"): string[] 
   }
   const personGuard = dropped.personGuard ?? 0;
   if (personGuard > 0) {
+    // Con la sección II-B activa (updatesOmitted existe) los descartes pueden venir de ella: texto genérico.
+    const scope = dropped.updatesOmitted !== undefined ? "personas" : "adjudicaciones y personas de la sección III";
     out.push(
       personGuard === 1
-        ? "descartado 1 elemento por el filtro de adjudicaciones y personas de la sección III"
-        : `descartados ${personGuard} elementos por el filtro de adjudicaciones y personas de la sección III`,
+        ? `descartado 1 elemento por el filtro de ${scope}`
+        : `descartados ${personGuard} elementos por el filtro de ${scope}`,
+    );
+  }
+  const updates = dropped.updatesOmitted ?? 0;
+  if (updates > 0) {
+    out.push(
+      updates === 1
+        ? "omitida 1 actualización de oposiciones (sección II-B)"
+        : `omitidas ${updates} actualizaciones de oposiciones (sección II-B)`,
+    );
+  }
+  const others = dropped.othersOmitted ?? 0;
+  if (others > 0) {
+    out.push(
+      others === 1
+        ? "omitido 1 elemento de oposiciones sin fase reconocida (sección II-B)"
+        : `omitidos ${others} elementos de oposiciones sin fase reconocida (sección II-B)`,
     );
   }
   return out;

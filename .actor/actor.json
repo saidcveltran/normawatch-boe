@@ -3,7 +3,7 @@
   "name": "normawatch-boe",
   "title": "NormaWatch",
   "description": "Las nuevas disposiciones generales del BOE, y si quieres del BOJA y el DOG, cada día en JSON y en tabla, con aviso opcional por correo, Telegram o Slack. Solo metadatos y enlaces oficiales. Gratis.",
-  "version": "1.6",
+  "version": "1.7",
   "minMemoryMbytes": 256,
   "maxMemoryMbytes": 256,
   "defaultRunOptions": {

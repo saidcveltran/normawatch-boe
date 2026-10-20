@@ -16,7 +16,7 @@
       "section": {
         "type": "string",
         "title": "Sección",
-        "description": "Sección: en el BOE, \"1\" (disposiciones generales) o, solo si activas la opción sections, \"3\" (otras disposiciones, con los filtros de la sección III); en los boletines autonómicos, la etiqueta de su sección de disposiciones generales."
+        "description": "Sección: en el BOE, \"1\" (disposiciones generales) o, solo si activas la opción sections, \"2B\" (oposiciones y concursos) o \"3\" (otras disposiciones, con los filtros de la sección III); en los boletines autonómicos, la etiqueta de su sección de disposiciones generales."
       },
       "department": {
         "type": "string",
@@ -72,6 +72,11 @@
         "type": "string",
         "title": "Boletín",
         "description": "Boletín de origen: \"BOE\", \"BOJA\" o \"DOG\". Campo añadido en la versión 1.5."
+      },
+      "stage": {
+        "type": "string",
+        "title": "Fase (derivada)",
+        "description": "Solo en la sección II-B (oposiciones): \"convocatoria\", \"actualizacion\" (listas de admitidos, tribunal, desierta, correcciones, aprobados, nombramientos) u \"otro\". La deriva este Actor del título; es una pista, no un dato oficial. Campo añadido en la versión 1.7."
       },
       "changes": {
         "type": "array",
@@ -160,6 +165,7 @@
           "retrievedAt",
           "source",
           "sourceUrl",
+          "stage",
           "changes",
           "changesStatus",
           "followed"
@@ -223,6 +229,10 @@
           "sourceUrl": {
             "label": "Dirección de la fuente",
             "format": "link"
+          },
+          "stage": {
+            "label": "Fase (derivada)",
+            "format": "text"
           },
           "changes": {
             "label": "Cambios",

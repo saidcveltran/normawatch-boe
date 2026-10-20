@@ -87,6 +87,7 @@ try {
     log: {
       info: (message, data) => log.info(message, data),
       error: (message, data) => log.error(message, data),
+      warn: (message, data) => log.warning(message, data),
     },
     ...(seen ? { seen } : {}),
     ...(notifier ? { notifier, setStatus: async (message: string) => void (await Actor.setStatusMessage(message)) } : {}),

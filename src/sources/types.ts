@@ -7,6 +7,6 @@ export type SourceAdapter = {
   id: Bulletin;
   // Pide el documento de un día (fecha ya validada). Un día sin boletín devuelve status "empty".
   fetchDay: (date: string, options: FetchOptions) => Promise<FetchResult>;
-  // Convierte el documento en elementos de salida. sections solo lo usa el BOE (sección III opcional).
-  parseDay: (body: unknown, date: string, retrievedAt: string, sections?: readonly string[]) => { items: OutputItem[]; dropped: Dropped };
+  // Convierte el documento en elementos de salida. sections e includeProcessUpdates solo los usa el BOE (secciones III y II-B opcionales).
+  parseDay: (body: unknown, date: string, retrievedAt: string, sections?: readonly string[], includeProcessUpdates?: boolean) => { items: OutputItem[]; dropped: Dropped };
 };

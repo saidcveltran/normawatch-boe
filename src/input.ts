@@ -42,6 +42,8 @@ export type RunInput = {
   relations?: true;
   // Identificadores BOE-A seguidos, en mayúsculas, sin repetidos y ordenados; solo aparece cuando hay alguno.
   followIds?: string[];
+  // Opción includeProcessUpdates (1.7): solo aparece cuando vale verdadero y la sección II-B está elegida.
+  includeProcessUpdates?: true;
 };
 
 export type NormalizedInput = {
@@ -57,6 +59,7 @@ export type NormalizedInput = {
   bulletins: string[];
   relations: boolean;
   followIds: string[];
+  includeProcessUpdates: boolean;
 };
 
 export type Filters = { departments?: string[]; keywords?: string[]; normTypes?: string[] };
@@ -142,8 +145,8 @@ function normTypesField(input: Record<string, unknown>): string[] {
   return out;
 }
 
-// Secciones del BOE: solo "1" (disposiciones generales) y "3" (otras disposiciones, con los filtros de
-// section3.ts). Los repetidos se unifican y la lista vacía o ausente significa solo la sección I.
+// Secciones del BOE: "1" (disposiciones generales), "2B" (oposiciones y concursos, oposiciones.ts) y "3" (otras
+// disposiciones, con los filtros de section3.ts). La II-A nunca se admite. Los repetidos se unifican y la lista vacía o ausente significa solo la sección I.
 function sectionsField(input: Record<string, unknown>): string[] {
   const v = input["sections"];
   if (v === undefined || v === null) return ["1"];
@@ -151,7 +154,9 @@ function sectionsField(input: Record<string, unknown>): string[] {
   if (v.length > MAX_LIST_ENTRIES) throw new BoeError(`sections admite como máximo ${MAX_LIST_ENTRIES} entradas`);
   const out = new Set<string>();
   for (const entry of v) {
-    if (entry !== "1" && entry !== "3") throw new BoeError('sections solo admite "1" (disposiciones generales) y "3" (otras disposiciones)');
+    if (entry !== "1" && entry !== "2B" && entry !== "3") {
+      throw new BoeError('sections solo admite "1" (disposiciones generales), "2B" (oposiciones y concursos) y "3" (otras disposiciones)');
+    }
     out.add(entry);
   }
   return out.size === 0 ? ["1"] : [...out].sort();
@@ -214,6 +219,7 @@ export function normalizeInput(input: Record<string, unknown>, today: string): N
     bulletins: bulletinsField(input),
     relations: boolField(input, "relations"),
     followIds: followIdsField(input),
+    includeProcessUpdates: boolField(input, "includeProcessUpdates"),
   };
 }
 
@@ -237,6 +243,8 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
     // Seguir normas implica leer las relaciones.
     ...(n.relations || n.followIds.length > 0 ? { relations: true as const } : {}),
     ...(n.followIds.length > 0 ? { followIds: n.followIds } : {}),
+    // Sin la sección II-B la opción no tiene efecto y no aparece: la entrada es la de 1.6.
+    ...(n.includeProcessUpdates && n.sections.includes("2B") ? { includeProcessUpdates: true as const } : {}),
   };
 }
 

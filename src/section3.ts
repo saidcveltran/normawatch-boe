@@ -64,6 +64,20 @@ const DNI_MASKED = /\*{2,}\d{1,2}\.?\d{3}\*+/;
 // Tratamientos de cortesía, sobre el texto plegado en minúsculas («señor» queda «senor»).
 const COURTESY = /(?<![\p{L}\d])(?:sra?|dra?)\.|(?<![\p{L}\d])senora?(?![\p{L}\d])/u;
 
+// Subconjunto para la sección II-B: solo lo que señala a una persona concreta (documento de identidad, tratamiento de
+// cortesía, «a favor de», «interpuesto por», «se emplaza», «beneficiari» y «se adjudica(n) … a»). No incluye
+// «relación de» ni «adjudic» a secas: descartarían actualizaciones y convocatorias legítimas.
+const PERSON_PHRASES: readonly string[] = ["a favor de", "interpuesto por", "se emplaza", "beneficiari"].map((p) => foldText(p, true));
+const ADJUDICA_A = /\bse adjudican? .*\ba\b/u;
+
+export function personSubsetHit(title: string): boolean {
+  const clean = foldText(title, false);
+  const lower = clean.toLowerCase();
+  if (PERSON_PHRASES.some((p) => lower.includes(p))) return true;
+  if (ADJUDICA_A.test(lower) || COURTESY.test(lower)) return true;
+  return DNI.test(clean) || NIE.test(clean) || DNI_SEP.test(clean) || NIE_SEP.test(clean) || DNI_MASKED.test(clean);
+}
+
 // Verdadero si el título es de una adjudicación o puede nombrar a una persona física.
 export function personGuardHit(title: string): boolean {
   const clean = foldText(title, false);

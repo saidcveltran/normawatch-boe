@@ -5,6 +5,7 @@ import { BoeError } from "../errors.ts";
 import { normTypeOf } from "../classify.ts";
 import { fetchDocument } from "../http.ts";
 import type { DocumentSpec, FetchOptions, FetchResult } from "../http.ts";
+import { validDate } from "../dates.ts";
 import { MAX_TEXT, cleanText, nameGuardHit } from "../parse.ts";
 import type { Dropped, OutputItem } from "../parse.ts";
 import { childText, childrenNamed, parseXml } from "../xml.ts";
@@ -67,10 +68,24 @@ function rssDate(v: string | undefined): string | undefined {
   if (v === undefined) return undefined;
   const parts = v.trim().split(/\s+/);
   const day = parts[1];
-  const month = parts[2] === undefined ? undefined : MONTHS[parts[2]];
+  const month = parts[2] !== undefined && Object.hasOwn(MONTHS, parts[2]) ? MONTHS[parts[2]] : undefined;
   const year = parts[3];
   if (day === undefined || month === undefined || year === undefined || !/^[0-9]{1,2}$/.test(day) || !/^[0-9]{4}$/.test(year)) return undefined;
-  return `${year}-${month}-${day.padStart(2, "0")}`;
+  const iso = `${year}-${month}-${day.padStart(2, "0")}`;
+  return validDate(iso) ? iso : undefined;
+}
+
+// Fecha del número que trae el RSS (AAAA-MM-DD), o undefined si el documento no la trae o no se puede leer.
+// Solo sirve para avisar en el registro de las fechas pedidas que el RSS no cubre.
+export function dogFeedDate(body: unknown): string | undefined {
+  if (typeof body !== "string") return undefined;
+  try {
+    const root = readFeed(body);
+    const channel = root.name === "rss" ? childrenNamed(root, "channel")[0] : undefined;
+    return channel === undefined ? undefined : rssDate(childText(channel, "pubDate") ?? childText(channel, "lastBuildDate"));
+  } catch {
+    return undefined;
+  }
 }
 
 export function parseDog(body: unknown, date: string, retrievedAt: string): { items: OutputItem[]; dropped: Dropped } {

@@ -6,6 +6,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.7.0] - 2026-10-20
+
+### Añadido
+
+- Sección II-B del BOE («Oposiciones y concursos»), opcional: `"sections": ["2B"]` (o `["1", "2B"]`). Por defecto se entregan solo las **convocatorias**; la opción `includeProcessUpdates` (por defecto desactivada) añade las actualizaciones (listas de admitidos y excluidos, tribunal, plazas desiertas, correcciones de errores, listas de aprobados, nombramientos) y los elementos sin fase reconocida. Cada elemento lleva `"section": "2B"` y el campo nuevo `stage` (`convocatoria`, `actualizacion` u `otro`), derivado del título: una pista, no un dato oficial. Unas 35 disposiciones al día, sobre todo de administración local y universidades.
+- La sección II-A (nombramientos y ceses) no se lee nunca, y de la II-B se guardan solo metadatos y enlaces: no se pide ningún documento. Se aplica el filtro de tratamientos personales (`don`, `doña`, `D.`…) y los descartados se cuentan en el registro, igual que lo omitido por fase (solo recuentos).
+- Los avisos muestran las oposiciones con la etiqueta «Oposiciones» y, si no son convocatorias, su fase.
+- Campo `stage` en el esquema del conjunto de datos (vista «Todos los campos») y opción `includeProcessUpdates` en el formulario de entrada.
+
+### Cambiado
+
+- El `User-Agent` pasa a `normawatch-boe/1.7`.
+- El filtro de tratamientos personales, común a todas las secciones, es algo más estricto: reconoce también `Dª.` y `D.a` y comprueba el título en forma NFKC (letras de ancho completo y formas de compatibilidad). En la sección II-B se añade además un filtro de personas (documentos de identidad, `Sr.`/`Sra.`, `Dr.`/`Dra.`, `señor`/`señora`, `a favor de`, `interpuesto por`, `se emplaza`, `beneficiari`, `se adjudica … a`) y los nombres de municipio con «Don» o «Doña» tras «Ayuntamiento de» (por ejemplo, «Puebla de Don Fadrique») ya no se descartan, siempre que el nombre vaya seguido de «(» o «,», tenga como mucho 60 caracteres, solo lleve letras, espacios, apóstrofos, guiones y puntos, no contenga palabras de una cláusula («por», «que», «se», «nombra», «convoca», «para», «a»…) y lleve como mucho un tratamiento, con mayúscula, justo detrás de «de» o «del» y seguido hasta el final del nombre solo de palabras con mayúscula; un tratamiento al principio del nombre o detrás de otra palabra («Ayuntamiento de Valencia don …») hace que el título se descarte como hasta ahora (un municipio cuyo nombre empiece por «Don» o «Doña» también se descarta). Límite conocido: una persona escrita como «Ayuntamiento de X de Don Nombre Apellido (» no se distingue de un municipio como «Valencia de Don Juan» y no se descarta.
+- Con el DOG elegido, si alguna fecha pedida no coincide con la del número que trae su RSS, el registro de la ejecución lo avisa una sola vez (fecha del RSS y número de fechas no consultables). No cambia ni los elementos, ni el código de salida, ni la huella ni la memoria de `onlyNew`.
+- Sin la sección II-B, la salida, las peticiones, la huella de reanudación y la memoria de `onlyNew` son idénticas a las de la 1.6.0.
+
 ## [1.6.0] - 2026-10-20
 
 ### Añadido

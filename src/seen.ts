@@ -17,6 +17,7 @@ export function seenKey(filters: {
   bulletins?: string[];
   relations?: boolean;
   followIds?: string[];
+  includeProcessUpdates?: boolean;
 }): string {
   const norm = (list: string[] | undefined): string[] =>
     [...new Set((list ?? []).map((s) => s.trim().toLowerCase()))].sort();
@@ -36,6 +37,8 @@ export function seenKey(filters: {
     // Las relaciones (1.6) y las normas seguidas entran solo cuando se usan: quien no las use conserva su memoria.
     ...(relations ? { relations: true } : {}),
     ...(follow.length > 0 ? { followIds: follow } : {}),
+    // Las actualizaciones de oposiciones (1.7) entran solo cuando se piden y la sección II-B está elegida.
+    ...(filters.includeProcessUpdates === true && sections.includes("2b") ? { includeProcessUpdates: true } : {}),
   });
   return `ids-${createHash("sha256").update(canonical).digest("hex").slice(0, 16)}`;
 }

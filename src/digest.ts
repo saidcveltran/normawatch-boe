@@ -5,7 +5,7 @@ import { SOURCE_LINE } from "./sources/boe.ts";
 import { UNSAFE_CHARS } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
 
-export type DigestItem = Pick<OutputItem, "department" | "title" | "normType" | "urlHtml" | "urlPdf" | "changes" | "followed"> & { bulletin?: string; source?: string };
+export type DigestItem = Pick<OutputItem, "department" | "title" | "normType" | "urlHtml" | "urlPdf" | "changes" | "followed"> & { section?: string; stage?: string; bulletin?: string; source?: string };
 export type DigestOptions = {
   dateFrom: string;
   dateTo: string;
@@ -94,6 +94,13 @@ function subjectFor(count: number, o: DigestOptions, where: string, followedCoun
   return `NormaWatch: ${what} en ${where} (${when})${followedCount > 0 ? ` · cambios en leyes que sigues: ${followedCount}` : ""}`;
 }
 
+// Etiqueta del tipo de cada elemento: las oposiciones (sección II-B) muestran «Oposiciones» y, si la fase no es
+// convocatoria, la fase; el resto, el tipo de norma de siempre.
+function labelOf(it: DigestItem): string {
+  if (it.section !== "2B") return it.normType;
+  return it.stage === "actualizacion" ? "Oposiciones · actualización" : it.stage === "otro" ? "Oposiciones · otro" : "Oposiciones";
+}
+
 // ---------- relaciones entre normas (opción relations) ----------
 
 const FOLLOW_HEADING = "Cambia una ley que sigues";
@@ -175,7 +182,7 @@ function buildText(shown: readonly DigestItem[], total: number, subject: string,
     for (const g of groups) {
       lines.push(oneLine(g.department));
       for (const it of g.items) {
-        lines.push(`- ${mixed ? `[${it.bulletin ?? "BOE"}] ` : ""}[${it.normType}] ${oneLine(it.title)}`);
+        lines.push(`- ${mixed ? `[${it.bulletin ?? "BOE"}] ` : ""}[${labelOf(it)}] ${oneLine(it.title)}`);
         for (const extra of extraLines(it)) lines.push(`  ${extra}`);
         const h = safeUrl(it.urlHtml);
         const p = safeUrl(it.urlPdf);
@@ -208,7 +215,7 @@ function buildHtml(shown: readonly DigestItem[], total: number, subject: string,
         if (h) links.push(`<a href="${escapeHtml(h)}">HTML</a>`);
         if (p) links.push(`<a href="${escapeHtml(p)}">PDF</a>`);
         const extra = extraLines(it).map((l) => `<br>${escapeHtml(l)}`).join("");
-        out.push(`<li>${mixed ? `<strong>${escapeHtml(it.bulletin ?? "BOE")}</strong> · ` : ""}<strong>${escapeHtml(it.normType)}</strong> · ${escapeHtml(oneLine(it.title))}${extra}${links.length > 0 ? `<br>${links.join(" · ")}` : ""}</li>`);
+        out.push(`<li>${mixed ? `<strong>${escapeHtml(it.bulletin ?? "BOE")}</strong> · ` : ""}<strong>${escapeHtml(labelOf(it))}</strong> · ${escapeHtml(oneLine(it.title))}${extra}${links.length > 0 ? `<br>${links.join(" · ")}` : ""}</li>`);
       }
       out.push("</ul>");
     }
@@ -244,7 +251,7 @@ function chatBlock(it: DigestItem, r: Renderer, withDepartment: boolean, mixed: 
   const p = safeUrl(it.urlPdf);
   if (h) links.push(r.link(h, "HTML"));
   if (p) links.push(r.link(p, "PDF"));
-  const line = `${mixed ? `${r.bold(r.text(it.bulletin ?? "BOE"))} · ` : ""}${r.bold(r.text(it.normType))} · ${r.text(cut(oneLine(it.title), CHAT_TITLE_MAX))}`;
+  const line = `${mixed ? `${r.bold(r.text(it.bulletin ?? "BOE"))} · ` : ""}${r.bold(r.text(labelOf(it)))} · ${r.text(cut(oneLine(it.title), CHAT_TITLE_MAX))}`;
   const extra = extraLines(it, compact).map((l) => `\n${r.text(l)}`).join("");
   return `${head}${line}${extra}${links.length > 0 ? `\n${links.join(" · ")}` : ""}`;
 }
