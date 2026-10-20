@@ -1,5 +1,6 @@
 import { Actor, log } from "apify";
-import { BoeError, errName, fetchSumario, madridToday, parseInput, runDays } from "./boe.ts";
+import { BoeError, errName, madridToday, parseInput, runDays } from "./boe.ts";
+import { adapterFor, isBulletin } from "./sources/index.ts";
 import { parseNotifyInput } from "./input.ts";
 import { createNotifier } from "./notify.ts";
 import type { NotifyDeps } from "./notify.ts";
@@ -48,6 +49,7 @@ try {
     ? createNotifier(plan, noticeDeps, {
         dateFrom: sortedDates[0]!,
         dateTo: sortedDates[sortedDates.length - 1]!,
+        ...(input.bulletins !== undefined ? { bulletins: input.bulletins } : {}),
         ...(datasetId ? { datasetUrl: `https://console.apify.com/storage/datasets/${datasetId}` } : {}),
       })
     : undefined;
@@ -57,6 +59,7 @@ try {
   Actor.on("migrating", () => {
     log.info("Migración en curso: el punto de control (STATE) ya está guardado y la ejecución se reanudará desde él");
   });
+  const memo = new Map<string, unknown>();
   const summary = await runDays(input, {
     checkpoint: {
       load: () => runStore.getValue(STATE_KEY),
@@ -74,7 +77,8 @@ try {
         return out;
       },
     },
-    fetchDay: (date) => fetchSumario(date, { requestDelayMs: input.requestDelayMs }),
+    // memo: el DOG sirve siempre el mismo RSS, que se pide una sola vez por ejecución.
+    fetchDay: (date, bulletin) => adapterFor(bulletin !== undefined && isBulletin(bulletin) ? bulletin : "BOE").fetchDay(date, { requestDelayMs: input.requestDelayMs, memo }),
     push: (items) => Actor.pushData(items),
     sleep,
     now: () => new Date().toISOString(),

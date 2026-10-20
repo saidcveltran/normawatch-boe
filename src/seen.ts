@@ -9,17 +9,20 @@ export const SEEN_STORE_NAME = "SEEN";
 // El filtro de tipos de norma entra en la clave solo cuando tiene valores, para que quien no lo use
 // conserve la memoria que ya tenía. Lo mismo vale para las secciones: solo entran en la clave cuando no son
 // la sección I sola, de modo que activar la sección III no mezcla su memoria con la de antes.
-export function seenKey(filters: { departments?: string[]; keywords?: string[]; normTypes?: string[]; sections?: string[] }): string {
+export function seenKey(filters: { departments?: string[]; keywords?: string[]; normTypes?: string[]; sections?: string[]; bulletins?: string[] }): string {
   const norm = (list: string[] | undefined): string[] =>
     [...new Set((list ?? []).map((s) => s.trim().toLowerCase()))].sort();
   const types = norm(filters.normTypes);
   const sections = norm(filters.sections);
+  const bulletins = [...new Set((filters.bulletins ?? []).map((s) => s.trim().toUpperCase()))].sort();
+  const onlyBoe = bulletins.length === 0 || (bulletins.length === 1 && bulletins[0] === "BOE");
   const onlyFirst = sections.length === 0 || (sections.length === 1 && sections[0] === "1");
   const canonical = JSON.stringify({
     departments: norm(filters.departments),
     keywords: norm(filters.keywords),
     ...(types.length > 0 ? { normTypes: types } : {}),
     ...(onlyFirst ? {} : { sections }),
+    ...(onlyBoe ? {} : { bulletins }),
   });
   return `ids-${createHash("sha256").update(canonical).digest("hex").slice(0, 16)}`;
 }
@@ -27,7 +30,8 @@ export function seenKey(filters: { departments?: string[]; keywords?: string[]; 
 // Tope de identificadores recordados: al superarlo se olvidan los más antiguos.
 export const MAX_SEEN = 50_000;
 
-const ID_FORMAT = /^BOE-A-[0-9]{4}-[0-9]+$/;
+// Identificadores de cada boletín: BOE (BOE-A-2026-1), BOJA (disposition.2026.199.1) y DOG (DOG-AnuncioC3K1-280926-0001).
+const ID_FORMAT = /^(?:BOE-A-[0-9]{4}-[0-9]+|disposition\.[0-9]{4}\.[0-9]+\.[0-9]+|DOG-[A-Za-z0-9-]{1,80})$/;
 
 // De un valor guardado solo se conservan las entradas con forma de identificador del BOE.
 function parseIds(raw: unknown): Set<string> {
@@ -58,7 +62,7 @@ export class SeenStore {
   }
 
   // Un valor guardado que no sea una lista se ignora (memoria vacía); en una lista se conservan
-  // solo las entradas con forma de identificador del BOE.
+  // solo las entradas con forma de identificador de algún boletín.
   // Si la lectura falla o el valor no es una lista, se avisa (sin contenido) y se empieza vacío.
   static async open(backend: SeenBackend, max: number = MAX_SEEN, warn?: (message: string) => void): Promise<SeenStore> {
     let raw: unknown;

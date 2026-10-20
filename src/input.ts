@@ -1,6 +1,8 @@
 // Validación y normalización de la entrada del Actor. Solo biblioteca estándar.
 // Cada campo se comprueba antes de hacer ninguna petición; una entrada incorrecta falla con un mensaje claro.
 import { BoeError } from "./errors.ts";
+import { validDate } from "./dates.ts";
+import { BULLETINS, isBulletin } from "./sources/ids.ts";
 import { isNormType, normTypeOf } from "./classify.ts";
 import { validEmail, validSlackWebhookUrl, validTelegramChatId, validTelegramToken } from "./notify.ts";
 import type { Channels } from "./notify.ts";
@@ -31,6 +33,8 @@ export type RunInput = {
   normTypes?: string[];
   // Secciones del BOE que se leen, ordenadas; solo aparece cuando no es la sección I sola (por ahora, con la III).
   sections?: string[];
+  // Boletines que se leen, en orden canónico; solo aparece cuando no es el BOE solo.
+  bulletins?: string[];
 };
 
 export type NormalizedInput = {
@@ -43,19 +47,14 @@ export type NormalizedInput = {
   keywords: string[];
   normTypes: string[];
   sections: string[];
+  bulletins: string[];
 };
 
 export type Filters = { departments?: string[]; keywords?: string[]; normTypes?: string[] };
 
 // ---------- fechas ----------
 
-// Estricta: solo AAAA-MM-DD de un día real del calendario.
-export function validDate(value: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!m) return false;
-  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
-  return d.toISOString().slice(0, 10) === value;
-}
+export { validDate };
 
 function dayNumber(value: string): number {
   return Math.round(Date.parse(`${value}T00:00:00Z`) / 86_400_000);
@@ -149,6 +148,21 @@ function sectionsField(input: Record<string, unknown>): string[] {
   return out.size === 0 ? ["1"] : [...out].sort();
 }
 
+// Boletines: lista de valores exactos de la lista cerrada. Los repetidos se unifican, el orden es el canónico y la
+// lista vacía o ausente significa solo el BOE. La sección III de 1.4 se aplica únicamente al BOE.
+function bulletinsField(input: Record<string, unknown>): string[] {
+  const v = input["bulletins"];
+  if (v === undefined || v === null) return ["BOE"];
+  if (!Array.isArray(v)) throw new BoeError("bulletins debe ser una lista de boletines");
+  if (v.length > MAX_LIST_ENTRIES) throw new BoeError(`bulletins admite como máximo ${MAX_LIST_ENTRIES} entradas`);
+  const chosen = new Set<string>();
+  for (const entry of v) {
+    if (!isBulletin(entry)) throw new BoeError(`bulletins solo admite ${BULLETINS.map((b) => `"${b}"`).join(", ")}`);
+    chosen.add(entry);
+  }
+  return chosen.size === 0 ? ["BOE"] : BULLETINS.filter((b) => chosen.has(b));
+}
+
 // Aplica los valores por defecto y comprueba todos los límites.
 export function normalizeInput(input: Record<string, unknown>, today: string): NormalizedInput {
   const dateFrom = dateField(input, "dateFrom") ?? today;
@@ -169,6 +183,7 @@ export function normalizeInput(input: Record<string, unknown>, today: string): N
     keywords: listField(input, "keywords"),
     normTypes: normTypesField(input),
     sections: sectionsField(input),
+    bulletins: bulletinsField(input),
   };
 }
 
@@ -188,6 +203,7 @@ export function parseInput(input: Record<string, unknown>, today: string): RunIn
     ...(n.keywords.length > 0 ? { keywords: n.keywords } : {}),
     ...(n.normTypes.length > 0 ? { normTypes: n.normTypes } : {}),
     ...(n.sections.length === 1 && n.sections[0] === "1" ? {} : { sections: n.sections }),
+    ...(n.bulletins.length === 1 && n.bulletins[0] === "BOE" ? {} : { bulletins: n.bulletins }),
   };
 }
 
