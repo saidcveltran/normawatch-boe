@@ -6,7 +6,7 @@
 
 **Las nuevas disposiciones generales del BOE, cada día, listas para usar.**
 
-<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.2-1636B5?style=flat" alt="Versión 1.5.2"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
+<img src="https://img.shields.io/badge/Versi%C3%B3n-1.5.3-1636B5?style=flat" alt="Versión 1.5.3"> <img src="https://img.shields.io/badge/Licencia-MIT-0AB8D8?style=flat" alt="Licencia MIT"> <img src="https://img.shields.io/badge/Actor%20de%20Apify-00E58C?style=flat" alt="Actor de Apify"> <img src="https://img.shields.io/badge/Node.js-24-339933?style=flat" alt="Node.js 24"> <img src="https://img.shields.io/badge/Fuente-BOE-5B6B8C?style=flat" alt="Fuente BOE">
 
 </div>
 
@@ -390,6 +390,8 @@ Si activas los avisos, los datos que tú aportas (tu dirección de correo, el id
 ## Mantenimiento
 
 Tras cualquier cambio en las dependencias (`package.json` o `package-lock.json`), ejecuta `npm run deps:check` antes de confirmar los cambios. El control comprueba la antigüedad mínima de 7 días de los paquetes añadidos o cambiados respecto a la última versión publicada (instantánea `scripts/last-release-ls.json`), además de `npm audit` y OSV.
+
+Las pruebas se mantienen fuera del repositorio público, por lo que `npm test` falla en un clon sin ellas.
 
 ## Cambios
 

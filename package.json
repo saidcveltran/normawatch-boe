@@ -1,6 +1,6 @@
 {
   "name": "normawatch-boe",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Las nuevas disposiciones generales del BOE, y si quieres del BOJA y el DOG, cada día en JSON y en tabla, con aviso opcional por correo, Telegram o Slack. Solo metadatos y enlaces oficiales. Gratis.",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test",
+    "test": "node scripts/run-tests.mjs",
     "check": "npm run typecheck && npm run test",
     "start": "node src/main.ts",
     "deps:check": "node scripts/supply-chain-check.mjs"
