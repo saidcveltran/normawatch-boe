@@ -2,6 +2,7 @@
 // biblioteca estándar. Todo texto del BOE se escapa según el destino y los enlaces solo salen de los
 // campos url* ya validados (https://www.boe.es/), que aquí se vuelven a comprobar.
 import { BOE_NOT_ENDORSED, SOURCE_LINE, SOURCE_URL } from "./sources/boe.ts";
+import { DOG_SOURCE_LINE } from "./sources/dog.ts";
 import { DOGC_LICENCE_NAME, DOGC_NOT_ENDORSED, DOGC_SOURCE_LINE, DOGC_SOURCE_URL } from "./sources/dogc.ts";
 import { UNSAFE_CHARS } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
@@ -60,7 +61,7 @@ function footerText(items: readonly DigestItem[]): string {
   const dogc = items.filter((it) => it.bulletin === "DOGC");
   const updated = dogc.map((it) => it.sourceUpdated).find((d): d is string => d !== undefined && /^\d{4}-\d{2}-\d{2}$/.test(d));
   const noDate = "fecha de actualización no disponible";
-  const shown = sources.map((x) => (x.startsWith(DOGC_SOURCE_LINE) ? `${x}; ${updated === undefined ? noDate : `información actualizada el ${ddmmyyyy(updated)}`}` : x));
+  const shown = sources.map((x) => (x.startsWith(DOGC_SOURCE_LINE) ? `${x}; ${updated === undefined ? noDate : `información actualizada el ${ddmmyyyy(updated)}`}` : x.startsWith(DOG_SOURCE_LINE) ? `${x}; fecha de actualización: la de publicación de cada elemento (campo date)` : x));
   const hasBoe = items.length === 0 || items.some((it) => it.bulletin === undefined || it.bulletin === "BOE");
   const notEndorsed = [...(hasBoe ? [BOE_NOT_ENDORSED] : []), ...(dogc.length > 0 ? [DOGC_NOT_ENDORSED] : [])].join(" ");
   return `${shown.join("; ")}. Resumen generado por NormaWatch; no es un texto oficial.${notEndorsed !== "" ? ` ${notEndorsed}` : ""}`;

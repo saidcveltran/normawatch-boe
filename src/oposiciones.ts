@@ -55,5 +55,5 @@ export function stageOf(title: string): Stage {
 // errores» o «se corrigen errores». Es una pista derivada, no un dato oficial.
 export function isCorrectionTitle(title: string): boolean {
   const t = fold(title);
-  return /correccion de (?:errores|erratas)/u.test(t) || /corrigen errores/u.test(t);
+  return /correccion de (?:errores|error|erratas?)/u.test(t) || /se corrigen? error(?:es)?/u.test(t);
 }
