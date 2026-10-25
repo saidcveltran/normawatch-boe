@@ -20,5 +20,7 @@ puedo y te aviso cuando esté corregido.
 - El código de este repositorio y el Actor publicado en la Apify Store.
 - Los avisos opcionales por correo, Telegram o Slack que envía el Actor.
 
+Los errores en los datos (un elemento mal clasificado, una fecha o un enlace incorrectos) no son una vulnerabilidad: abre una incidencia pública en GitHub, como se explica en el README.
+
 Los boletines oficiales (BOE, BOJA, DOG, DOGC) y la plataforma Apify quedan fuera: si el problema
 está en ellos, avisa directamente a sus responsables.

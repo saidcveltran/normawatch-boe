@@ -1,6 +1,6 @@
 {
   "name": "normawatch-boe",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Las nuevas disposiciones generales del BOE y, si quieres, las oposiciones y los boletines de Andalucía, Galicia y Cataluña, cada día en JSON y en tabla, con aviso opcional por correo, Telegram o Slack. Solo metadatos y enlaces oficiales. Gratis.",
   "private": true,
   "type": "module",

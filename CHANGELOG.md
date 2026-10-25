@@ -6,6 +6,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [1.9.0] - 2026-10-25
+
+### Añadido
+
+- Campos `isCorrection` (booleano) y `correctsId` (texto o `null`) en todos los elementos: `isCorrection` marca las correcciones de errores reconocidas por el título (en la sección II-B, también «se corrigen errores») y `correctsId` trae el identificador de la primera norma que corrige cuando se usa `relations` en la sección I del BOE; en el resto vale `null`. Declarados en el esquema del conjunto de datos y en la vista «Todos los campos».
+- El pie de los avisos del BOE lleva el enlace a <https://www.boe.es> y una frase que aclara que la Agencia Estatal Boletín Oficial del Estado no participa, patrocina ni respalda el Actor.
+- Secciones del README «Exactitud y responsabilidad», «Correcciones y cambios», «Cómo avisar de un error en los datos» y «Próximos pasos», y una frase que sitúa NormaWatch frente a otras alternativas.
+- Plantilla de incidencia para avisar de errores en los datos y aviso en `SECURITY.md` de que esos errores van a las incidencias públicas.
+
+### Cambiado
+
+- La línea de fuente (`source`) del BOE pasa a la fórmula de su licencia de reutilización: «Basado en datos de la Agencia Estatal Boletín Oficial del Estado».
+- Cuando el DOGC no ofrece fecha de actualización, el pie de los avisos dice «fecha de actualización no disponible».
+- El README documenta que el sumario del BOE no incluye fecha de actualización (la fecha del elemento es la de publicación) y recoge las condiciones de las licencias autonómicas, comprobadas el 25 de octubre de 2026.
+- El `User-Agent` pasa a `normawatch-boe/1.9`.
+
 ## [1.8.0] - 2026-10-20
 
 ### Añadido
