@@ -69,6 +69,10 @@ export type OutputItem = {
   // Solo con la opción relations y solo en la sección I del BOE.
   changes?: Change[];
   changesStatus?: ChangesStatus;
+  // Desde la 1.9, en todos los elementos: verdadero si el elemento es una corrección de errores (por el título; derivado, no oficial).
+  isCorrection?: boolean;
+  // Desde la 1.9, en todos los elementos: identificador de la primera norma que corrige, solo con relations en la sección I del BOE; si no, null.
+  correctsId?: string | null;
   // Solo con followIds: los identificadores seguidos que este elemento cambia.
   followed?: string[];
 };

@@ -19,6 +19,7 @@ import type { Notifier } from "./notify.ts";
 import { DOCUMENT_ID, MAX_CONSECUTIVE_RELATION_ERRORS, MAX_RELATION_HTTP_ATTEMPTS, MAX_RELATION_REQUESTS, MAX_TOTAL_RELATION_ERRORS, followedBy, parseRelations } from "./relations.ts";
 import type { RelationsFetch } from "./relations.ts";
 import { dogFeedDate } from "./sources/dog.ts";
+import { isCorrectionTitle } from "./oposiciones.ts";
 import { adapterFor } from "./sources/index.ts";
 import type { Bulletin } from "./sources/index.ts";
 
@@ -297,6 +298,12 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
   // Opción relations: recuentos de la ejecución (el tope de documentos y los fallos seguidos se cuentan por ejecución).
   const follow = input.followIds ?? [];
   const rel = { fetched: 0, ok: 0, pending: 0, error: 0, skipped: 0, consecutiveErrors: 0, bypassed: 0, attempts: 0, totalErrors: 0, followCheckSkipped: 0 };
+  // Desde la 1.9 todos los elementos llevan isCorrection y correctsId (null salvo que relations haya leído una corrección).
+  const withCorrection = (it: OutputItem): OutputItem => {
+    const byTitle = it.normType === "Corrección de errores" || (it.section === "2B" && isCorrectionTitle(it.title));
+    const first = it.changes?.find((c) => c.action === "corrige");
+    return { ...it, isCorrection: byTitle, correctsId: first?.targetId ?? null };
+  };
   const withRelations = (it: OutputItem, status: ChangesStatus, changes: Change[]): OutputItem => ({
     ...it,
     changes,
@@ -417,6 +424,7 @@ export async function runDays(input: RunInput, deps: RunDeps): Promise<RunSummar
       } else {
         room = candidates.slice(0, input.maxItems - summary.stored);
       }
+      room = room.map(withCorrection);
       if (room.length > 0) {
         await deps.push(room);
         for (const it of room) delivered.add(it.id);

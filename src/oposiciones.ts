@@ -50,3 +50,10 @@ export function stageOf(title: string): Stage {
   if (CALL.some((r) => r.test(t))) return "convocatoria";
   return "otro";
 }
+
+// En la II-B las correcciones se reconocen por el mismo título que ya marca la fase de actualización: «corrección de
+// errores» o «se corrigen errores». Es una pista derivada, no un dato oficial.
+export function isCorrectionTitle(title: string): boolean {
+  const t = fold(title);
+  return /correccion de (?:errores|erratas)/u.test(t) || /corrigen errores/u.test(t);
+}

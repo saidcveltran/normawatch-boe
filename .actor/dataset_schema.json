@@ -56,7 +56,7 @@
       "source": {
         "type": "string",
         "title": "Fuente",
-        "description": "Línea de fuente de los datos del boletín de origen, con su licencia en los boletines autonómicos."
+        "description": "Línea de fuente de los datos del boletín de origen (en el BOE, «Basado en datos de la Agencia Estatal Boletín Oficial del Estado»), con su licencia en los boletines autonómicos."
       },
       "sourceUrl": {
         "type": "string",
@@ -93,6 +93,16 @@
         "title": "Normas seguidas que cambia",
         "description": "Solo con la opción followIds: identificadores de followIds que esta disposición cambia. Vacío si no cambia ninguna.",
         "items": { "type": "string" }
+      },
+      "isCorrection": {
+        "type": "boolean",
+        "title": "Es una corrección (derivado)",
+        "description": "Verdadero si el elemento es una corrección de errores, reconocida por el título (en la sección II-B, también «se corrigen errores»). Pista derivada por este Actor, no un dato oficial. Campo añadido en la versión 1.9."
+      },
+      "correctsId": {
+        "type": ["string", "null"],
+        "title": "Corrige a",
+        "description": "Identificador de la primera norma que el BOE indica que esta disposición corrige. Solo se rellena con la opción relations en la sección I del BOE; en el resto es null (los boletines autonómicos solo marcan isCorrection, sin enlace). Campo añadido en la versión 1.9."
       },
       "sourceUpdated": {
         "type": "string",
@@ -174,7 +184,9 @@
           "changes",
           "changesStatus",
           "followed",
-          "sourceUpdated"
+          "sourceUpdated",
+          "isCorrection",
+          "correctsId"
         ]
       },
       "display": {
@@ -254,6 +266,14 @@
           },
           "sourceUpdated": {
             "label": "Fuente actualizada el",
+            "format": "text"
+          },
+          "isCorrection": {
+            "label": "Es una corrección (derivado)",
+            "format": "boolean"
+          },
+          "correctsId": {
+            "label": "Corrige a",
             "format": "text"
           }
         }
