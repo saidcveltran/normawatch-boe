@@ -62,7 +62,8 @@ function withoutMunicipality(title: string): string {
   return title.replace(MUNICIPALITY, (whole: string, segment: string) => (placeLike(segment) ? " " : whole));
 }
 
-export const SOURCE_LINE = "Fuente de los datos: Agencia Estatal Boletín Oficial del Estado";
+export const SOURCE_LINE = "Basado en datos de la Agencia Estatal Boletín Oficial del Estado";
+export const BOE_NOT_ENDORSED = "La Agencia Estatal Boletín Oficial del Estado no participa en NormaWatch, ni lo patrocina ni lo respalda; solo la edición electrónica del BOE es oficial.";
 export const SOURCE_URL = "https://www.boe.es";
 
 export const BASE_URL = "https://www.boe.es/datosabiertos/api/boe/sumario/";

@@ -1,7 +1,7 @@
 // Resumen de lo entregado en una ejecución, listo para correo, Telegram o Slack. Función pura, solo
 // biblioteca estándar. Todo texto del BOE se escapa según el destino y los enlaces solo salen de los
 // campos url* ya validados (https://www.boe.es/), que aquí se vuelven a comprobar.
-import { SOURCE_LINE } from "./sources/boe.ts";
+import { BOE_NOT_ENDORSED, SOURCE_LINE, SOURCE_URL } from "./sources/boe.ts";
 import { DOGC_LICENCE_NAME, DOGC_NOT_ENDORSED, DOGC_SOURCE_LINE, DOGC_SOURCE_URL } from "./sources/dogc.ts";
 import { UNSAFE_CHARS } from "./parse.ts";
 import type { OutputItem } from "./parse.ts";
@@ -43,6 +43,8 @@ function withLicenceUrl(line: string): string {
   if (line.endsWith("(CC BY 4.0)")) return `${line} https://creativecommons.org/licenses/by/4.0/`;
   // DOGC: licencia propia de la Generalitat (citar la fuente, no alterar el contenido, indicar la fecha de actualización).
   if (line === DOGC_SOURCE_LINE) return `${line}, ${DOGC_LICENCE_NAME} ${DOGC_SOURCE_URL}`;
+  // BOE: la licencia de reutilización pide enlazar la sede del BOE junto a «Basado en datos de…».
+  if (line === SOURCE_LINE) return `${line} (${SOURCE_URL})`;
   return line;
 }
 
@@ -57,8 +59,11 @@ function footerText(items: readonly DigestItem[]): string {
   // DOGC: fecha de la última actualización de la información y aviso de que la Generalitat no respalda el servicio.
   const dogc = items.filter((it) => it.bulletin === "DOGC");
   const updated = dogc.map((it) => it.sourceUpdated).find((d): d is string => d !== undefined && /^\d{4}-\d{2}-\d{2}$/.test(d));
-  const shown = updated === undefined ? sources : sources.map((x) => (x.startsWith(DOGC_SOURCE_LINE) ? `${x}; información actualizada el ${ddmmyyyy(updated)}` : x));
-  return `${shown.join("; ")}. Resumen generado por NormaWatch; no es un texto oficial.${dogc.length > 0 ? ` ${DOGC_NOT_ENDORSED}` : ""}`;
+  const noDate = "fecha de actualización no disponible";
+  const shown = sources.map((x) => (x.startsWith(DOGC_SOURCE_LINE) ? `${x}; ${updated === undefined ? noDate : `información actualizada el ${ddmmyyyy(updated)}`}` : x));
+  const hasBoe = items.length === 0 || items.some((it) => it.bulletin === undefined || it.bulletin === "BOE");
+  const notEndorsed = [...(hasBoe ? [BOE_NOT_ENDORSED] : []), ...(dogc.length > 0 ? [DOGC_NOT_ENDORSED] : [])].join(" ");
+  return `${shown.join("; ")}. Resumen generado por NormaWatch; no es un texto oficial.${notEndorsed !== "" ? ` ${notEndorsed}` : ""}`;
 }
 
 // Verdadero si algún elemento no es del BOE: entonces cada elemento muestra su boletín.
