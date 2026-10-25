@@ -21,6 +21,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Cuando el DOGC no ofrece fecha de actualización, el pie de los avisos dice «fecha de actualización no disponible».
 - El README documenta que el sumario del BOE no incluye fecha de actualización (la fecha del elemento es la de publicación) y recoge las condiciones de las licencias autonómicas, comprobadas el 25 de octubre de 2026.
 - El `User-Agent` pasa a `normawatch-boe/1.9`.
+- El pie de los avisos del DOG indica que su fecha de actualización es la de publicación de cada elemento (campo `date`), y el README aclara que su línea de fuente es la forma en castellano de «Fonte dos datos: Xunta de Galicia».
+- En la sección II-B, `isCorrection` también reconoce las formas en singular («corrección de error», «se corrige error»).
+- La frase de alternativas del README menciona OpoAlerta para quien solo busca oposiciones.
 
 ## [1.8.0] - 2026-10-20
 
