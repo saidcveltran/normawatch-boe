@@ -20,7 +20,7 @@ Frente a las alertas de Mi BOE y los RSS del BOE (gratuitos, solo BOE), la API d
 
 ## In English
 
-**NormaWatch** is a Spain official gazette API in the form of an Apify Actor. It lists the new general provisions (Section I) of Spain's Official State Gazette (BOE, Boletín Oficial del Estado) and, optionally, of the BOJA (Andalusia) and DOG (Galicia) regional gazettes, every day, as JSON and as a table in the Apify console. Each item carries metadata and official links only, never the full text.
+**NormaWatch** is a Spain official gazette API in the form of an Apify Actor. It lists the new general provisions (Section I) of Spain's Official State Gazette (BOE, Boletín Oficial del Estado) and, optionally, of the BOJA (Andalusia), DOG (Galicia) and DOGC (Catalonia) regional gazettes, every day, as JSON and as a table in the Apify console. Each item carries metadata and official links only, never the full text.
 
 It suits Spanish legislation monitoring and regulatory alerts for Spain: compliance teams, law firms, journalists and developers who feed their own alerts or dashboards with a BOE API.
 
